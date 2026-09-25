@@ -6,11 +6,15 @@ const root=path.resolve(__dirname,'..');
 const dist=path.join(root,'dist');
 const seen=new Set();
 function copy(relative){
-  relative=relative.replace(/^\//,'').split(/[?#]/)[0];
-  if(!relative||/^[a-z]+:/i.test(relative)||seen.has(relative))return;
-  const source=path.resolve(root,relative);
-  if(!source.startsWith(root+path.sep)||!fs.existsSync(source))throw new Error('Recurso não encontrado: '+relative);
+  relative=relative.replace(/^\.?\//,'').split(/[?#]/)[0];
+  if(!relative||relative==='.'||/^[a-z]+:/i.test(relative))return;
+  if(!relative.endsWith('.html')&&fs.existsSync(path.resolve(root,relative+'.html'))){
+    relative=relative+'.html';
+  }
+  if(seen.has(relative))return;
   seen.add(relative);
+  const source=path.resolve(root,relative);
+  if(!source.startsWith(root+path.sep)||!fs.existsSync(source)||fs.statSync(source).isDirectory())return;
   const destination=path.join(dist,relative);
   fs.mkdirSync(path.dirname(destination),{recursive:true});
   fs.copyFileSync(source,destination);

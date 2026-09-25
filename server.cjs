@@ -22,7 +22,13 @@ const server = http.createServer((req,res)=>{
   } catch {res.writeHead(400,headers).end('Requisição inválida');return;}
   if(pathname==='/')pathname='/index.html';
   const slug=pathname.replace(/^\//,'').replace(/\/$/,'');
-  if(pages.includes(slug)) {res.writeHead(308,{...headers,Location:`/${slug}.html`}).end();return;}
+  if(slug.endsWith('.html') && pages.includes(slug.slice(0, -5)) && slug !== 'index.html') {
+    res.writeHead(308,{...headers,Location:`/${slug.slice(0, -5)}`}).end();
+    return;
+  }
+  if(pages.includes(slug)) {
+    pathname = `/${slug}.html`;
+  }
   const file=path.resolve(root,'.'+pathname);
   const ext=path.extname(file).toLowerCase();
   const asset=pathname.startsWith('/assets/')&&Object.hasOwn(types,ext)&&ext!=='.html';

@@ -1,10 +1,10 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const replacements=[
-  ['<a href="#colecoes">Óculos</a>','<a href="oculos.html">Óculos</a>'],
-  ['<a href="#lentes">Lentes</a>','<a href="lentes.html">Lentes</a>'],
-  ['<a href="#historia">Nossa história</a>','<a href="sobre.html">Nossa história</a>'],
-  ['<a href="#visite">Visite a loja</a>','<a href="visite.html">Visite a loja</a>']
+  ['<a href="#colecoes">Óculos</a>','<a href="oculos">Óculos</a>'],
+  ['<a href="#lentes">Lentes</a>','<a href="lentes">Lentes</a>'],
+  ['<a href="#historia">Nossa história</a>','<a href="sobre">Nossa história</a>'],
+  ['<a href="#visite">Visite a loja</a>','<a href="visite">Visite a loja</a>']
 ];
 function connect(source){return replacements.reduce((html,[from,to])=>html.replace(from,to),source);}
 if(require.main===module){

@@ -28,19 +28,20 @@ const faqs = [
   ['Visita','Quais são os horários de atendimento?','Segunda a sexta, das 9h às 18h30. Aos sábados, das 9h às 13h. Domingo fechado. Em feriados, consulte a equipe antes da visita.']
 ];
 function faqRows(items = faqs, searchable = false) {
-  return items.map(([group,q,a],index)=>`<details class="question"${searchable?` data-faq data-category="${group}"`:''}><summary><span>${q}</span></summary><div class="answer"><p>${a}</p>${q.startsWith('Onde')?link('visite.html','Ver localização'):''}</div></details>`).join('');
+  return items.map(([group,q,a],index)=>`<details class="question"${searchable?` data-faq data-category="${group}"`:''}><summary><span>${q}</span></summary><div class="answer"><p>${a}</p>${q.startsWith('Onde')?link('visite','Ver localização'):''}</div></details>`).join('');
 }
 const pages = [];
 function page(slug,title,description,active,body,{og='olhares-geracoes',cls=''}={}) {
   const filename=slug+'.html';
+  const cleanUrl=slug==='index'?base:`${base}/${slug}`;
   const html=`<!doctype html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title} | Óptica Ocular</title><meta name="description" content="${description}"><meta name="theme-color" content="#231f20"><link rel="canonical" href="${base}/${filename}"><meta property="og:type" content="website"><meta property="og:locale" content="pt_BR"><meta property="og:site_name" content="Óptica Ocular"><meta property="og:title" content="${title} | Óptica Ocular"><meta property="og:description" content="${description}"><meta property="og:url" content="${base}/${filename}"><meta property="og:image" content="${base}/assets/ensaio/${og}-social.jpg"><meta property="og:image:alt" content="Ensaio editorial em preto e branco da Óptica Ocular"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="assets/logo-dark.png"><link rel="preload" href="assets/fonts/cormorant-garamond-normal-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="assets/fonts/manrope-normal-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="interiores.css"><script src="interiores.js" defer></script></head><body class="interior ${cls}">${header(active)}<main id="conteudo">${body}</main>${footer()}</body></html>`;
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title} | Óptica Ocular</title><meta name="description" content="${description}"><meta name="theme-color" content="#231f20"><link rel="canonical" href="${cleanUrl}"><meta property="og:type" content="website"><meta property="og:locale" content="pt_BR"><meta property="og:site_name" content="Óptica Ocular"><meta property="og:title" content="${title} | Óptica Ocular"><meta property="og:description" content="${description}"><meta property="og:url" content="${cleanUrl}"><meta property="og:image" content="${base}/assets/ensaio/${og}-social.jpg"><meta property="og:image:alt" content="Ensaio editorial em preto e branco da Óptica Ocular"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="assets/logo-dark.png"><link rel="preload" href="assets/fonts/cormorant-garamond-normal-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="assets/fonts/manrope-normal-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="interiores.css"><script src="interiores.js" defer></script></head><body class="interior ${cls}">${header(active)}<main id="conteudo">${body}</main>${footer()}</body></html>`;
   fs.writeFileSync(path.join(root,filename),slug==='404'?html.replace('<head>','<head><meta name="robots" content="noindex">'):html,'utf8');
-  if(slug!=='404')pages.push(filename);
+  if(slug!=='404')pages.push(slug);
 }
 
 require('./page-content.cjs')({page,photo,link,wa,route,generic,arrow,faqRows});
 
-fs.writeFileSync(path.join(root,'sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${base}/</loc></url>${pages.map(p=>`<url><loc>${base}/${p}</loc></url>`).join('')}</urlset>\n`);
+fs.writeFileSync(path.join(root,'sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${base}/</loc></url>${pages.map(slug=>`<url><loc>${base}/${slug}</loc></url>`).join('')}</urlset>\n`);
 fs.writeFileSync(path.join(root,'robots.txt'),`User-agent: *\nAllow: /\nSitemap: ${base}/sitemap.xml\n`);
 console.log(`Geradas ${pages.length} páginas internas, página 404 e sitemap. Home preservada.`);

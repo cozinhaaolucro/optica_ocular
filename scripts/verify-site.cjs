@@ -12,9 +12,11 @@ function hash(file){return crypto.createHash('sha256').update(fs.readFileSync(fi
 function validateRef(from,ref){
   if(!ref||/^(https?:|mailto:|tel:|data:)/.test(ref))return;
   const url=new URL(ref,'http://local'+from);
-  const local=path.join(root,decodeURIComponent(url.pathname));
+  let local=path.join(root,decodeURIComponent(url.pathname));
+  if(url.pathname==='/'||url.pathname==='')local=path.join(root,'index.html');
+  else if(!fs.existsSync(local)&&fs.existsSync(local+'.html'))local=local+'.html';
   assert.ok(fs.existsSync(local),`Recurso ausente em ${from}: ${ref}`);
-  if(url.hash&&url.pathname.endsWith('.html')){
+  if(url.hash&&fs.existsSync(local)&&local.endsWith('.html')){
     const dest=fs.readFileSync(local,'utf8');
     assert.ok(dest.includes(`id="${decodeURIComponent(url.hash.slice(1))}"`),`Âncora inválida em ${from}: ${ref}`);
   }
@@ -60,11 +62,13 @@ server.listen(0,'127.0.0.1',async()=>{
       assert.equal(response.status,404,file);
       assert.match(await response.text(),/<base href="\/">/);
     }
-    const redirect=await fetch(base+'/lentes',{redirect:'manual'});
-    assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'/lentes.html');
-    const head=await fetch(base+'/oculos.html',{method:'HEAD'});
+    const clean=await fetch(base+'/lentes');
+    assert.equal(clean.status,200);
+    const redirect=await fetch(base+'/lentes.html',{redirect:'manual'});
+    assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'/lentes');
+    const head=await fetch(base+'/oculos',{method:'HEAD'});
     assert.equal(head.status,200);assert.equal(await head.text(),'');
-    assert.equal((await fetch(base+'/oculos.html',{method:'POST'})).status,405);
+    assert.equal((await fetch(base+'/oculos',{method:'POST'})).status,405);
     const webp=await fetch(base+'/assets/ensaio/grau-retrato-640.webp');
     assert.equal(webp.status,200);assert.equal(webp.headers.get('content-type'),'image/webp');await webp.arrayBuffer();
     assert.equal((await fetch(base+'/%00')).status,400);
