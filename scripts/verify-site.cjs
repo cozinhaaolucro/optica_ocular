@@ -41,7 +41,7 @@ for(const item of baseline){
   if(path.basename(item.Path)==='index.html'){
     const {connect}=require('./connect-home.cjs');
     const original=fs.readFileSync(path.join(root,'qa/home-original.html'),'utf8');
-    assert.equal(fs.readFileSync(item.Path,'utf8'),connect(original),'Home: mudanças além dos quatro links de menu');
+    assert.equal(fs.readFileSync(path.join(root,'index.html'),'utf8'),connect(original),'Home: mudanças além dos quatro links de menu');
     continue;
   }
   assert.equal(hash(item.Path),item.Hash,`Recurso da home alterado: ${item.Path}`);

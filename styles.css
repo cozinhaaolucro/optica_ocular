@@ -1435,34 +1435,114 @@ footer {
 }
 
 /* =============================================================================
-   Floating WhatsApp
+   Floating WhatsApp (Alta conversão)
    ============================================================================= */
 .floating-contact {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  width: 54px;
-  height: 54px;
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  display: flex;
+  min-height: 52px;
+  background: linear-gradient(135deg, #25d366 0%, #1ebe5d 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  z-index: 40;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+  gap: 10px;
+  padding: 8px 18px 8px 12px;
+  z-index: 99;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4), 0 2px 6px rgba(0, 0, 0, 0.16);
   transition: transform 0.25s cubic-bezier(0.2, 0, 0.2, 1), background 0.25s, box-shadow 0.25s;
+  cursor: pointer;
 }
 
 .floating-contact:hover {
-  background: var(--color-dark-surface);
-  transform: scale(1.08) translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #2ae36f 0%, #20ba5a 100%);
+  color: #ffffff;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(37, 211, 102, 0.55), 0 4px 10px rgba(0, 0, 0, 0.22);
 }
 
-.floating-contact svg {
+.floating-contact-pulse {
+  position: absolute;
+  inset: -3px;
+  border-radius: 999px;
+  pointer-events: none;
+  animation: wpp-pulse 2.2s infinite ease-in-out;
+}
+
+@keyframes wpp-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+  }
+  65% {
+    box-shadow: 0 0 0 14px rgba(37, 211, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
+.floating-contact-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: #ffffff;
+}
+
+.floating-contact-icon svg {
+  width: 28px;
+  height: 28px;
   display: block;
+}
+
+.floating-contact-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.floating-contact-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.floating-contact-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  display: inline-block;
+  box-shadow: 0 0 6px #ffffff;
+  animation: wpp-dot-blink 1.8s infinite ease-in-out;
+}
+
+@keyframes wpp-dot-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.floating-contact-action {
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  font-family: var(--font-body, 'Manrope', sans-serif);
+}
+
+.floating-contact-badge-mobile {
+  display: none;
 }
 
 /* =============================================================================
@@ -1716,8 +1796,43 @@ dialog a {
   .floating-contact {
     bottom: max(18px, env(safe-area-inset-bottom));
     right: 18px;
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
+    min-height: 56px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .floating-contact-text {
+    display: none;
+  }
+
+  .floating-contact-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .floating-contact-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .floating-contact-pulse {
+    border-radius: 50%;
+  }
+
+  .floating-contact-badge-mobile {
+    display: block;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: #ffffff;
+    border: 2.5px solid #25d366;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
   }
 }
 
