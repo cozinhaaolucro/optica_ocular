@@ -1,0 +1,1 @@
+{"name":"optica-ocular-site","version":"2.0.0","private":true,"description":"Site institucional completo da Óptica Ocular, com home preservada","scripts":{"start":"node server.cjs","pages":"node scripts/build-pages.cjs","build":"node scripts/package-site.cjs","check":"node --check app.js && node --check interiores.js && node --check server.cjs && node scripts/verify-site.cjs"}}

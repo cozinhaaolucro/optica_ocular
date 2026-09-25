@@ -1,0 +1,16 @@
+node_modules/
+.vercel/
+dist/
+*.zip
+*.log
+.env
+.env.*
+!.env.example
+qa/
+research/
+ensaio-originais/
+versao-1/
+previa-*.png
+print-completo*.png
+.DS_Store
+Thumbs.db
