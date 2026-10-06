@@ -79,20 +79,20 @@
   /* ── Data loading (lazy) ── */
   async function ensureData() {
     if (lensData) return true;
-    loadingEl.hidden = false;
-    bodyEl.hidden = true;
+    loadingEl.style.display = 'flex';
+    bodyEl.style.display = 'none';
     try {
-      const resp = await fetch('assets/lentes-data.json');
+      const resp = await fetch('/assets/lentes-data.json');
       if (!resp.ok) throw new Error(resp.status);
       lensData = await resp.json();
     } catch (err) {
       bodyEl.innerHTML = '<p class="lens-cfg-error">Não foi possível carregar o catálogo.<br>Tente novamente em instantes.</p>';
-      bodyEl.hidden = false;
-      loadingEl.hidden = true;
+      bodyEl.style.display = '';
+      loadingEl.style.display = 'none';
       return false;
     }
-    loadingEl.hidden = true;
-    bodyEl.hidden = false;
+    loadingEl.style.display = 'none';
+    bodyEl.style.display = '';
     return true;
   }
 

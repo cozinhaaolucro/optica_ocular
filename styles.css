@@ -1458,7 +1458,7 @@ legend {
 
 /* ── Loading & Error ── */
 .lens-cfg-loading {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   gap: 14px;
