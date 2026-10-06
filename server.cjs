@@ -4,8 +4,8 @@ const path = require('node:path');
 const root = __dirname;
 const port = Number(process.env.PORT || 4173);
 const pages = ['index','oculos','oculos-de-grau','oculos-de-sol','lentes','sobre','visite','duvidas','privacidade','404'];
-const publicFiles = new Set([...pages.map(name=>`/${name}.html`),'/styles.css','/fonts.css','/app.js','/interiores.css','/interiores.js','/robots.txt','/sitemap.xml']);
-const types = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf','.txt':'text/plain; charset=utf-8','.xml':'application/xml; charset=utf-8'};
+const publicFiles = new Set([...pages.map(name=>`/${name}.html`),'/styles.css','/fonts.css','/app.js','/lentes-cfg.js','/interiores.css','/interiores.js','/robots.txt','/sitemap.xml']);
+const types = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf','.txt':'text/plain; charset=utf-8','.xml':'application/xml; charset=utf-8'};
 const headers = {'X-Content-Type-Options':'nosniff','Cache-Control':'no-cache','Referrer-Policy':'strict-origin-when-cross-origin'};
 function notFound(req,res) {
   fs.readFile(path.join(root,'404.html'),'utf8',(err,data)=>{

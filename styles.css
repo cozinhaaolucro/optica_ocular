@@ -1070,6 +1070,470 @@ legend {
 }
 
 /* =============================================================================
+   Lens Configurator (Simulador de Lentes)
+   ============================================================================= */
+
+/* ── Card container — matches .chooser form styling ── */
+.lens-cfg {
+  background: var(--color-surface);
+  padding: 36px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+  opacity: 0;
+  transform: scale(0.97) translateY(10px);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lens-cfg.lens-cfg-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Form transition states ── */
+.lens-form-hiding {
+  opacity: 0;
+  transform: scale(0.97) translateY(6px);
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+.lens-form-showing {
+  animation: lens-form-enter 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes lens-form-enter {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Header row (back + close) ── */
+.lens-cfg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.lens-cfg-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition: color 0.18s;
+}
+
+.lens-cfg-back:hover {
+  color: var(--color-text);
+}
+
+.lens-cfg-close {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-text-muted);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.18s, color 0.18s;
+}
+
+.lens-cfg-close:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+/* ── Breadcrumb ── */
+.lens-cfg-breadcrumb {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  min-height: 18px;
+}
+
+.lens-bc-sep {
+  margin: 0 4px;
+  color: var(--color-text-subtle);
+}
+
+.lens-bc-active {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ── Title ── */
+.lens-cfg-title {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 400;
+  margin: 12px 0 20px;
+  color: var(--color-text);
+}
+
+/* ── Body fade transition ── */
+.lens-cfg-body {
+  transition: opacity 0.16s ease;
+}
+
+.lens-cfg-fading {
+  opacity: 0;
+}
+
+/* ── Step grid (steps 1 & 2) ── */
+.lens-cfg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.lens-cfg-grid-brands {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
+.lens-cfg-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 14px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.18s;
+}
+
+.lens-cfg-option:hover {
+  border-color: var(--color-accent);
+  background: var(--color-surface-muted);
+  transform: translateY(-2px);
+}
+
+.lens-cfg-opt-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.lens-cfg-opt-desc {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* ── Brand logo inside option ── */
+.lens-cfg-brand-logo {
+  max-height: 36px;
+  max-width: 110px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: contrast(1.05);
+}
+
+/* ── Products list (step 3) ── */
+.lens-cfg-products {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.lens-cfg-products::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lens-cfg-products::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lens-cfg-products::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.lens-cfg-product {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.lens-cfg-product:hover {
+  border-color: var(--color-accent);
+  background: var(--color-surface-muted);
+}
+
+.lens-cfg-prod-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lens-cfg-prod-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lens-cfg-prod-cat {
+  font-size: 10px;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lens-cfg-prod-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.lens-cfg-price-from {
+  font-size: 9px;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lens-cfg-price-val {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+/* ── Configurations list (step 4) ── */
+.lens-cfg-configs {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.lens-cfg-configs::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lens-cfg-configs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lens-cfg-configs::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.lens-cfg-opcao {
+  margin-bottom: 16px;
+}
+
+.lens-cfg-opcao:last-of-type {
+  margin-bottom: 0;
+}
+
+.lens-cfg-opcao-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--color-text-muted);
+  padding-bottom: 8px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.lens-cfg-config-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.lens-cfg-config-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-surface-muted);
+}
+
+.lens-cfg-config-row:last-child {
+  border-bottom: 0;
+}
+
+.lens-cfg-config-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lens-cfg-config-mat {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.lens-cfg-config-trt {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.lens-cfg-config-esf {
+  font-size: 10px;
+  color: var(--color-text-subtle);
+  margin-top: 2px;
+}
+
+.lens-cfg-config-val {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.lens-cfg-config-price {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.lens-cfg-config-unit {
+  font-size: 9px;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Footer CTA ── */
+.lens-cfg-footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.lens-cfg-disclaimer {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.lens-cfg-wa {
+  width: 100%;
+  text-align: center;
+}
+
+/* ── Loading & Error ── */
+.lens-cfg-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.lens-cfg-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: lens-spin 0.75s linear infinite;
+}
+
+@keyframes lens-spin {
+  to { transform: rotate(360deg); }
+}
+
+.lens-cfg-error {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.lens-cfg-empty {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* ── Mobile adjustments ── */
+@media (max-width: 820px) {
+  .lens-cfg {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .lens-cfg-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .lens-cfg {
+    padding: 24px;
+  }
+
+  .lens-cfg-title {
+    font-size: 20px;
+  }
+
+  .lens-cfg-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lens-cfg-products {
+    max-height: 320px;
+  }
+
+  .lens-cfg-configs {
+    max-height: 340px;
+  }
+
+  .lens-cfg-prod-name {
+    font-size: 12px;
+  }
+}
+
+/* =============================================================================
    Story
    ============================================================================= */
 .story {

@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="assets/lenis.min.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="lentes-cfg.js" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -200,7 +201,7 @@
         <div class="choices">
           <label><input type="radio" name="interesse" value="Óculos de grau" checked><span>Óculos de grau</span></label>
           <label><input type="radio" name="interesse" value="Óculos de sol"><span>Óculos de sol</span></label>
-          <label><input type="radio" name="interesse" value="Lentes multifocais"><span>Lentes multifocais</span></label>
+          <label><input type="radio" name="interesse" value="Lentes"><span>Lentes</span></label>
           <label><input type="radio" name="interesse" value="Ajuda para escolher"><span>Ajuda para escolher</span></label>
         </div>
       </fieldset>
@@ -208,6 +209,22 @@
       <p class="caption">Você será direcionado ao WhatsApp com sua mensagem pronta para envio.</p>
       <p id="form-status" role="status" aria-live="polite"></p>
     </form>
+    <div id="lens-configurator" class="lens-cfg" hidden>
+      <div class="lens-cfg-header">
+        <button class="lens-cfg-back" type="button" aria-label="Voltar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          <span>Voltar</span>
+        </button>
+        <button class="lens-cfg-close" type="button" aria-label="Fechar simulador">×</button>
+      </div>
+      <div class="lens-cfg-breadcrumb" aria-label="Etapas do simulador"></div>
+      <h3 class="lens-cfg-title"></h3>
+      <div class="lens-cfg-body"></div>
+      <div class="lens-cfg-loading" hidden>
+        <div class="lens-cfg-spinner"></div>
+        <span>Carregando catálogo…</span>
+      </div>
+    </div>
   </section>
 
   <section class="story" id="historia">
