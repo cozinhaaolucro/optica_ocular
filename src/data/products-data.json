@@ -1,0 +1,639 @@
+{
+  "products": [
+    {
+      "id": "ray-ban-aviator-classic",
+      "slug": "ray-ban-aviator-classic",
+      "name": "Ray-Ban Aviator Classic",
+      "category": "sol",
+      "brand": "Ray-Ban",
+      "price": 899,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "O ícone clássico que definiu estilo por gerações. Frame de metal, lentes cristal verde.",
+      "features": [
+        "Frame de metal durável",
+        "Lentes cristal verde G-15",
+        "Proteção UV 400",
+        "Ajuste nasal flexível"
+      ],
+      "availability": "Em estoque",
+      "tags": ["clássico", "metal", "unissex"]
+    },
+    {
+      "id": "ray-ban-wayfarer-classic",
+      "slug": "ray-ban-wayfarer-classic",
+      "name": "Ray-Ban Wayfarer Classic",
+      "category": "sol",
+      "brand": "Ray-Ban",
+      "price": 999,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Design revolucionário que se tornou um símbolo de contracultura e estilo.",
+      "features": [
+        "Frame de acetato",
+        "Lentes cristal verde G-15",
+        "Proteção UV 400",
+        "Hinges reforçados"
+      ],
+      "availability": "Em estoque",
+      "tags": ["clássico", "acetato", "unissex"]
+    },
+    {
+      "id": "ray-ban-clubmaster",
+      "slug": "ray-ban-clubmaster",
+      "name": "Ray-Ban Clubmaster",
+      "category": "sol",
+      "brand": "Ray-Ban",
+      "price": 1199,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Retrô com atitude. Combinação de metal e acetato para visual distinto.",
+      "features": [
+        "Frame misto metal/acetato",
+        "Lentes polarizadas",
+        "Proteção UV 400",
+        "Design retrô"
+      ],
+      "availability": "Em estoque",
+      "tags": ["retrô", "acetato", "unissex"]
+    },
+    {
+      "id": "police-v2834m",
+      "slug": "police-v2834m",
+      "name": "Police V2834M",
+      "category": "grau",
+      "brand": "Police",
+      "price": 749,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Design moderno com detalhes metálicos. Perfeito para profissionais exigentes.",
+      "features": [
+        "Frame de acetato e metal",
+        "Design ergonômico",
+        "Ajuste confortável",
+        "Detalhes da marca nas hastes"
+      ],
+      "availability": "Em estoque",
+      "tags": ["moderno", "profissional", "masculino"]
+    },
+    {
+      "id": "police-v2557m",
+      "slug": "police-v2557m",
+      "name": "Police V2557M",
+      "category": "grau",
+      "brand": "Police",
+      "price": 699,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Estilo urbano com personalidade forte. Ideal para quem busca diferenciação.",
+      "features": [
+        "Frame oversized",
+        "Detalhes metálicos",
+        "Design audacioso",
+        "Conforto prolongado"
+      ],
+      "availability": "Em estoque",
+      "tags": ["urbano", "oversized", "masculino"]
+    },
+    {
+      "id": "vogue-vo5324",
+      "slug": "vogue-vo5324",
+      "name": "Vogue VO5324",
+      "category": "grau",
+      "brand": "Vogue",
+      "price": 599,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Elegância feminina com detalhes delicados. Ideal para rotinas diárias.",
+      "features": [
+        "Frame de acetato leve",
+        "Design feminino",
+        "Cores vibrantes",
+        "Conforto prolongado"
+      ],
+      "availability": "Em estoque",
+      "tags": ["feminino", "elegante", "leve"]
+    },
+    {
+      "id": "vogue-vo5295",
+      "slug": "vogue-vo5295",
+      "name": "Vogue VO5295",
+      "category": "grau",
+      "brand": "Vogue",
+      "price": 549,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Minimalismo sofisticado. Linhas clean para visual contemporâneo.",
+      "features": [
+        "Frame ultra-leve",
+        "Design minimalista",
+        "Cores neutras",
+        "Versátil"
+      ],
+      "availability": "Em estoque",
+      "tags": ["minimalista", "leve", "feminino"]
+    },
+    {
+      "id": "guess-gu7390",
+      "slug": "guess-gu7390",
+      "name": "Guess GU7390",
+      "category": "sol",
+      "brand": "Guess",
+      "price": 849,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Glamour e atitude. Óculos de sol com logo icônico da Guess.",
+      "features": [
+        "Frame oversized",
+        "Logo da Guess nas hastes",
+        "Lentes polarizadas",
+        "Proteção UV total"
+      ],
+      "availability": "Em estoque",
+      "tags": ["glamuroso", "oversized", "feminino"]
+    },
+    {
+      "id": "guess-gu7371",
+      "slug": "guess-gu7371",
+      "name": "Guess GU7371",
+      "category": "sol",
+      "brand": "Guess",
+      "price": 799,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Estilo casual com toque de luxo. Perfeito para dias ensolarados.",
+      "features": [
+        "Frame de acetato",
+        "Logo estilizado",
+        "Lentes de alta qualidade",
+        "Design moderno"
+      ],
+      "availability": "Em estoque",
+      "tags": ["casual", "moderno", "unissex"]
+    },
+    {
+      "id": "versace-ve4351",
+      "slug": "versace-ve4351",
+      "name": "Versace VE4351",
+      "category": "sol",
+      "brand": "Versace",
+      "price": 1499,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Luxo italiano com icônico Medusa. Uma declaração de estilo inconfundível.",
+      "features": [
+        "Frame de acetato premium",
+        "Detalhe Medusa nas hastes",
+        "Lentes de alta qualidade",
+        "Acabamento sofisticado"
+      ],
+      "availability": "Em estoque",
+      "tags": ["luxo", "premium", "exclusivo"]
+    },
+    {
+      "id": "versace-ve2176",
+      "slug": "versace-ve2176",
+      "name": "Versace VE2176",
+      "category": "grau",
+      "brand": "Versace",
+      "price": 1399,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Elegância italiana para o dia a dia. Luxo acessível.",
+      "features": [
+        "Frame de metal leve",
+        "Logo Greca detalhado",
+        "Design sofisticado",
+        "Conforto excepcional"
+      ],
+      "availability": "Em estoque",
+      "tags": ["luxo", "metal", "unissex"]
+    },
+    {
+      "id": "emporio-armani-ea4174",
+      "slug": "emporio-armani-ea4174",
+      "name": "Emporio Armani EA4174",
+      "category": "grau",
+      "brand": "Emporio Armani",
+      "price": 1099,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Minimalismo elegante. Design contemporâneo para o profissional moderno.",
+      "features": [
+        "Frame de metal ultra-leve",
+        "Design minimalista",
+        "Logo Armani discreto",
+        "Ajuste nasal flexível"
+      ],
+      "availability": "Em estoque",
+      "tags": ["minimalista", "profissional", "leve"]
+    },
+    {
+      "id": "emporio-armani-ea3094",
+      "slug": "emporio-armani-ea3094",
+      "name": "Emporio Armani EA3094",
+      "category": "sol",
+      "brand": "Emporio Armani",
+      "price": 1199,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Sofisticação casual. Perfeito para verão e viagens.",
+      "features": [
+        "Frame oversized",
+        "Logo águia estilizado",
+        "Lentes gradient",
+        "Proteção UV total"
+      ],
+      "availability": "Em estoque",
+      "tags": ["sofisticado", "oversized", "unissex"]
+    },
+    {
+      "id": "swarovski-sk5117",
+      "slug": "swarovski-sk5117",
+      "name": "Swarovski SK5117",
+      "category": "grau",
+      "brand": "Swarovski",
+      "price": 1299,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Brilho e sofisticação com cristais Swarovski. Feminino e delicado.",
+      "features": [
+        "Cristais Swarovski nas hastes",
+        "Frame de acetato",
+        "Design delicado",
+        "Exclusivo e elegante"
+      ],
+      "availability": "Em estoque",
+      "tags": ["brilhante", "feminino", "exclusivo"]
+    },
+    {
+      "id": "swarovski-sk5230",
+      "slug": "swarovski-sk5230",
+      "name": "Swarovski SK5230",
+      "category": "sol",
+      "brand": "Swarovski",
+      "price": 1499,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Luxo com brilho. Cristais Swarovski que capturam a luz.",
+      "features": [
+        "Cristais estruturados",
+        "Frame de acetato premium",
+        "Lentes espelhadas",
+        "Design glamour"
+      ],
+      "availability": "Em estoque",
+      "tags": ["glamour", "brilhante", "feminino"]
+    },
+    {
+      "id": "persol-po3217s",
+      "slug": "persol-po3217s",
+      "name": "Persol PO3217S",
+      "category": "sol",
+      "brand": "Persol",
+      "price": 1299,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Herança italiana. O icônico Supreme Arrow define a marca.",
+      "features": [
+        "Supreme Arrow metálico",
+        "Frame de acetato",
+        "Lentes cristal",
+        "Heritage italiano"
+      ],
+      "availability": "Em estoque",
+      "tags": ["clássico", "italiano", "unissex"]
+    },
+    {
+      "id": "persol-po3007v",
+      "slug": "persol-po3007v",
+      "name": "Persol PO3007V",
+      "category": "grau",
+      "brand": "Persol",
+      "price": 1199,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Elegância atemporal. Design que transcende gerações.",
+      "features": [
+        "Meflecto system",
+        "Frame de metal",
+        "Ajuste perfeito",
+        "Durabilidade excepcional"
+      ],
+      "availability": "Em estoque",
+      "tags": ["atemporal", "metal", "unissex"]
+    },
+    {
+      "id": "mormaii-mm0015",
+      "slug": "mormaii-mm0015",
+      "name": "Mormaii MM0015",
+      "category": "sol",
+      "brand": "Mormaii",
+      "price": 599,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Espírito de aventura. Proteção total para praticantes de esportes.",
+      "features": [
+        "Lentes polarizadas",
+        "Frame flexível",
+        "Proteção UV400",
+        "Resistente a impactos"
+      ],
+      "availability": "Em estoque",
+      "tags": ["esportivo", "polarizado", "masculino"]
+    },
+    {
+      "id": "mormaii-mm0020",
+      "slug": "mormaii-mm0020",
+      "name": "Mormaii MM0020",
+      "category": "sol",
+      "brand": "Mormaii",
+      "price": 649,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Design atlético. Perfeito para atividades ao ar livre.",
+      "features": [
+        "Lentes espelhadas",
+        "Frame leve",
+        "Ventilação superior",
+        "Grip antiderrapante"
+      ],
+      "availability": "Em estoque",
+      "tags": ["atlético", "esportivo", "unissex"]
+    },
+    {
+      "id": "fila-fla041",
+      "slug": "fila-fla041",
+      "name": "Fila FLA041",
+      "category": "sol",
+      "brand": "Fila",
+      "price": 499,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Estilo streetwear. Influência urbana com toque retrô.",
+      "features": [
+        "Frame oversized",
+        "Logo Fila",
+        "Lentes gradient",
+        "Design casual"
+      ],
+      "availability": "Em estoque",
+      "tags": ["streetwear", "casual", "unissex"]
+    },
+    {
+      "id": "occhi-oc001",
+      "slug": "occhi-oc001",
+      "name": "Occhi OC001",
+      "category": "grau",
+      "brand": "Occhi",
+      "price": 449,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Design acessível sem perder estilo. Qualidade garantida.",
+      "features": [
+        "Frame de acetato",
+        "Cores variadas",
+        "Leveza",
+        "Preço competitivo"
+      ],
+      "availability": "Em estoque",
+      "tags": ["acessível", "casual", "unissex"]
+    },
+    {
+      "id": "ana-hickmann-ah456",
+      "slug": "ana-hickmann-ah456",
+      "name": "Ana Hickmann AH456",
+      "category": "grau",
+      "brand": "Ana Hickmann",
+      "price": 599,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Feminilidade e elegância. Design assinado pela modelo brasileira.",
+      "features": [
+        "Detalhes delicados",
+        "Frame de acetato",
+        "Cores suaves",
+        "Design feminino"
+      ],
+      "availability": "Em estoque",
+      "tags": ["feminino", "elegante", "brasileiro"]
+    },
+    {
+      "id": "davidoff-dv3018",
+      "slug": "davidoff-dv3018",
+      "name": "Davidoff DV3018",
+      "category": "sol",
+      "brand": "Davidoff",
+      "price": 999,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Luxo masculino. Sofisticação que define status.",
+      "features": [
+        "Frame de metal premium",
+        "Logo estilizado",
+        "Lentes polarizadas",
+        "Acabamento fino"
+      ],
+      "availability": "Em estoque",
+      "tags": ["luxo", "masculino", "premium"]
+    },
+    {
+      "id": "yalea-y101",
+      "slug": "yalea-y101",
+      "name": "Yalea Y101",
+      "category": "grau",
+      "brand": "Yalea",
+      "price": 399,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Inovação brasileira. Design moderno com tecnologia de ponta.",
+      "features": [
+        "Frame leve",
+        "Design contemporâneo",
+        "Tecnologia avançada",
+        "Preço acessível"
+      ],
+      "availability": "Em estoque",
+      "tags": ["inovador", "brasileiro", "moderno"]
+    },
+    {
+      "id": "just-cavalli-jc242",
+      "slug": "just-cavalli-jc242",
+      "name": "Just Cavalli JC242",
+      "category": "sol",
+      "brand": "Just Cavalli",
+      "price": 1099,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Exuberância italiana. Estampas animal print icônicas.",
+      "features": [
+        "Estampa animal print",
+        "Frame oversized",
+        "Logo Just Cavalli",
+        "Lentes gradient"
+      ],
+      "availability": "Em estoque",
+      "tags": ["exuberante", "animal print", "feminino"]
+    },
+    {
+      "id": "ralph-lauren-rl8059",
+      "slug": "ralph-lauren-rl8059",
+      "name": "Ralph Lauren RL8059",
+      "category": "grau",
+      "brand": "Ralph Lauren",
+      "price": 1199,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Preppy classic. Elegância americana atemporal.",
+      "features": [
+        "Frame de acetato",
+        "Logo Pony detalhado",
+        "Design preppy",
+        "Qualidade premium"
+      ],
+      "availability": "Em estoque",
+      "tags": ["preppy", "clássico", "unissex"]
+    },
+    {
+      "id": "colcci-c550",
+      "slug": "colcci-c550",
+      "name": "Colcci C550",
+      "category": "sol",
+      "brand": "Colcci",
+      "price": 549,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Jeanswear chic. Estilo casual comDNA brasileiro.",
+      "features": [
+        "Frame colorido",
+        "Logo Colcci",
+        "Lentes espelhadas",
+        "Design jovem"
+      ],
+      "availability": "Em estoque",
+      "tags": ["casual", "jovem", "brasileiro"]
+    },
+    {
+      "id": "platini-p100",
+      "slug": "platini-p100",
+      "name": "Platini P100",
+      "category": "grau",
+      "brand": "Platini",
+      "price": 349,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Praticidade e estilo. Óculos para o dia a dia sem complicação.",
+      "features": [
+        "Frame simples",
+        "Leveza",
+        "Durabilidade",
+        "Preço acessível"
+      ],
+      "availability": "Em estoque",
+      "tags": ["prático", "acessível", "unissex"]
+    },
+    {
+      "id": "aramis-a501",
+      "slug": "aramis-a501",
+      "name": "Aramis A501",
+      "category": "grau",
+      "brand": "Aramis",
+      "price": 699,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Masculinidade clássica. Fragrância de sucesso em forma de óculos.",
+      "features": [
+        "Frame robusto",
+        "Design masculino",
+        "Acabamento fosco",
+        "Conforto"
+      ],
+      "availability": "Em estoque",
+      "tags": ["masculino", "clássico", "robusto"]
+    },
+    {
+      "id": "victor-hugo-vh100",
+      "slug": "victor-hugo-vh100",
+      "name": "Victor Hugo VH100",
+      "category": "sol",
+      "brand": "Victor Hugo",
+      "price": 599,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Design brasileiro popular. Estilo acessível para todos.",
+      "features": [
+        "Frame colorido",
+        "Logo estilizado",
+        "Lentes variadas",
+        "Preço competitivo"
+      ],
+      "availability": "Em estoque",
+      "tags": ["popular", "brasileiro", "acessível"]
+    },
+    {
+      "id": "detroit-d201",
+      "slug": "detroit-d201",
+      "name": "Detroit D201",
+      "category": "grau",
+      "brand": "Detroit",
+      "price": 449,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Urbano e descontraído. Estilo que não passa despercebido.",
+      "features": [
+        "Frame moderno",
+        "Cores vibrantes",
+        "Design jovem",
+        "Leveza"
+      ],
+      "availability": "Em estoque",
+      "tags": ["urbano", "jovem", "colorido"]
+    },
+    {
+      "id": "destaque-ds001",
+      "slug": "destaque-ds001",
+      "name": "Destaque DS001",
+      "category": "sol",
+      "brand": "Destaque",
+      "price": 399,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Proteção solar essencial. Qualidade sem ostentação.",
+      "features": [
+        "Lentes UV400",
+        "Frame simples",
+        "Proteção básica",
+        "Durabilidade"
+      ],
+      "availability": "Em estoque",
+      "tags": ["básico", "proteção", "acessível"]
+    },
+    {
+      "id": "evoke-ev101",
+      "slug": "evoke-ev101",
+      "name": "Evoke EV101",
+      "category": "grau",
+      "brand": "Evoke",
+      "price": 499,
+      "images": ["/assets/grau-isolado.png"],
+      "description": "Design contemporâneo. Linhas modernas para visual atual.",
+      "features": [
+        "Frame geométrico",
+        "Cores tendência",
+        "Leveza",
+        "Design inovador"
+      ],
+      "availability": "Em estoque",
+      "tags": ["moderno", "geométrico", "tendência"]
+    }
+  ],
+  "categories": [
+    {
+      "id": "grau",
+      "name": "Óculos de Grau",
+      "slug": "grau",
+      "description": "Armações para correção visual com estilo e conforto.",
+      "image": "/assets/grau-isolado.png"
+    },
+    {
+      "id": "sol",
+      "name": "Óculos de Sol",
+      "slug": "sol",
+      "description": "Proteção UV com design contemporâneo.",
+      "image": "/assets/solar-isolado.png"
+    }
+  ],
+  "brands": [
+    "Police",
+    "Ray-Ban",
+    "Yalea",
+    "Vogue",
+    "Guess",
+    "Just Cavalli",
+    "Ralph Lauren",
+    "Destaque",
+    "Evoke",
+    "Colcci",
+    "Platini",
+    "Aramis",
+    "Victor Hugo",
+    "Davidoff",
+    "Detroit",
+    "Fila",
+    "Ana Hickmann",
+    "Persol",
+    "Mormaii",
+    "Occhi",
+    "Emporio Armani",
+    "Swarovski",
+    "Versace"
+  ]
+}

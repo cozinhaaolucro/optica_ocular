@@ -1,0 +1,133 @@
+{
+  "grau-retrato": {
+    "width": 1122,
+    "height": 1402,
+    "widths": [
+      640,
+      1122
+    ],
+    "files": [
+      {
+        "name": "grau-retrato-640.webp",
+        "width": 640,
+        "height": 800,
+        "bytes": 43284
+      },
+      {
+        "name": "grau-retrato-1122.webp",
+        "width": 1122,
+        "height": 1402,
+        "bytes": 102710
+      }
+    ]
+  },
+  "sol-retrato": {
+    "width": 1122,
+    "height": 1402,
+    "widths": [
+      640,
+      1122
+    ],
+    "files": [
+      {
+        "name": "sol-retrato-640.webp",
+        "width": 640,
+        "height": 800,
+        "bytes": 33280
+      },
+      {
+        "name": "sol-retrato-1122.webp",
+        "width": 1122,
+        "height": 1402,
+        "bytes": 84928
+      }
+    ]
+  },
+  "lentes-detalhe": {
+    "width": 1536,
+    "height": 1024,
+    "widths": [
+      640,
+      1280,
+      1536
+    ],
+    "files": [
+      {
+        "name": "lentes-detalhe-640.webp",
+        "width": 640,
+        "height": 427,
+        "bytes": 27848
+      },
+      {
+        "name": "lentes-detalhe-1280.webp",
+        "width": 1280,
+        "height": 853,
+        "bytes": 74170
+      },
+      {
+        "name": "lentes-detalhe-1536.webp",
+        "width": 1536,
+        "height": 1024,
+        "bytes": 95748
+      }
+    ]
+  },
+  "gesto-cuidado": {
+    "width": 1536,
+    "height": 1024,
+    "widths": [
+      640,
+      1280,
+      1536
+    ],
+    "files": [
+      {
+        "name": "gesto-cuidado-640.webp",
+        "width": 640,
+        "height": 427,
+        "bytes": 31342
+      },
+      {
+        "name": "gesto-cuidado-1280.webp",
+        "width": 1280,
+        "height": 853,
+        "bytes": 95996
+      },
+      {
+        "name": "gesto-cuidado-1536.webp",
+        "width": 1536,
+        "height": 1024,
+        "bytes": 123668
+      }
+    ]
+  },
+  "olhares-geracoes": {
+    "width": 1536,
+    "height": 1024,
+    "widths": [
+      640,
+      1280,
+      1536
+    ],
+    "files": [
+      {
+        "name": "olhares-geracoes-640.webp",
+        "width": 640,
+        "height": 427,
+        "bytes": 27832
+      },
+      {
+        "name": "olhares-geracoes-1280.webp",
+        "width": 1280,
+        "height": 853,
+        "bytes": 92376
+      },
+      {
+        "name": "olhares-geracoes-1536.webp",
+        "width": 1536,
+        "height": 1024,
+        "bytes": 125208
+      }
+    ]
+  }
+}

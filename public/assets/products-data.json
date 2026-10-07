@@ -1,0 +1,213 @@
+{
+  "products": [
+    {
+      "id": "ray-ban-aviator-classic",
+      "slug": "ray-ban-aviator-classic",
+      "name": "Ray-Ban Aviator Classic",
+      "category": "sol",
+      "brand": "Ray-Ban",
+      "price": 899,
+      "images": [
+        "/assets/products/ray-ban-aviator-1.jpg",
+        "/assets/products/ray-ban-aviator-2.jpg"
+      ],
+      "description": "O ícone clássico que definiu estilo por gerações. Frame de metal, lentes cristal verde.",
+      "features": [
+        "Frame de metal durável",
+        "Lentes cristal verde G-15",
+        "Proteção UV 400",
+        "Ajuste nasal flexível"
+      ],
+      "availability": "Em estoque",
+      "tags": ["clássico", "metal", "unissex"]
+    },
+    {
+      "id": "ray-ban-wayfarer-classic",
+      "slug": "ray-ban-wayfarer-classic",
+      "name": "Ray-Ban Wayfarer Classic",
+      "category": "sol",
+      "brand": "Ray-Ban",
+      "price": 999,
+      "images": [
+        "/assets/products/ray-ban-wayfarer-1.jpg",
+        "/assets/products/ray-ban-wayfarer-2.jpg"
+      ],
+      "description": "Design revolucionário que se tornou um símbolo de contracultura e estilo.",
+      "features": [
+        "Frame de acetato de acetato",
+        "Lentes cristal verde G-15",
+        "Proteção UV 400",
+        "Hinges reforçados"
+      ],
+      "availability": "Em estoque",
+      "tags": ["clássico", "acetato", "unissex"]
+    },
+    {
+      "id": "police-v2834m",
+      "slug": "police-v2834m",
+      "name": "Police V2834M",
+      "category": "grau",
+      "brand": "Police",
+      "price": 749,
+      "images": [
+        "/assets/products/police-v2834m-1.jpg",
+        "/assets/products/police-v2834m-2.jpg"
+      ],
+      "description": "Design moderno com detalhes metálicos. Perfeito para profissionais exigentes.",
+      "features": [
+        "Frame de acetato e metal",
+        "Design ergonômico",
+        "Ajuste confortável",
+        "Detalhes da marca nas hastes"
+      ],
+      "availability": "Em estoque",
+      "tags": ["moderno", "profissional", "masculino"]
+    },
+    {
+      "id": "vogue-vo5324",
+      "slug": "vogue-vo5324",
+      "name": "Vogue VO5324",
+      "category": "grau",
+      "brand": "Vogue",
+      "price": 599,
+      "images": [
+        "/assets/products/vogue-vo5324-1.jpg",
+        "/assets/products/vogue-vo5324-2.jpg"
+      ],
+      "description": "Elegância feminina com detalhes delicados. Ideal para rotinas diárias.",
+      "features": [
+        "Frame de acetato leve",
+        "Design feminino",
+        "Cores vibrantes",
+        "Conforto prolongado"
+      ],
+      "availability": "Em estoque",
+      "tags": ["feminino", "elegante", "leve"]
+    },
+    {
+      "id": "guess-gu7390",
+      "slug": "guess-gu7390",
+      "name": "Guess GU7390",
+      "category": "sol",
+      "brand": "Guess",
+      "price": 849,
+      "images": [
+        "/assets/products/guess-gu7390-1.jpg",
+        "/assets/products/guess-gu7390-2.jpg"
+      ],
+      "description": "Glamour e atitude. Óculos de sol com logo icônico da Guess.",
+      "features": [
+        "Frame oversized",
+        "Logo da Guess nas hastes",
+        "Lentes polarizadas",
+        "Proteção UV total"
+      ],
+      "availability": "Em estoque",
+      "tags": ["glamuroso", "oversized", "feminino"]
+    },
+    {
+      "id": "versace-ve4351",
+      "slug": "versace-ve4351",
+      "name": "Versace VE4351",
+      "category": "sol",
+      "brand": "Versace",
+      "price": 1499,
+      "images": [
+        "/assets/products/versace-ve4351-1.jpg",
+        "/assets/products/versace-ve4351-2.jpg"
+      ],
+      "description": "Luxo italiano com icônico Medusa. Uma declaração de estilo inconfundível.",
+      "features": [
+        "Frame de acetato premium",
+        "Detalhe Medusa nas hastes",
+        "Lentes de alta qualidade",
+        "Acabamento sofisticado"
+      ],
+      "availability": "Em estoque",
+      "tags": ["luxo", "premium", "exclusivo"]
+    },
+    {
+      "id": "emporio-armani-ea4174",
+      "slug": "emporio-armani-ea4174",
+      "name": "Emporio Armani EA4174",
+      "category": "grau",
+      "brand": "Emporio Armani",
+      "price": 1099,
+      "images": [
+        "/assets/products/ea4174-1.jpg",
+        "/assets/products/ea4174-2.jpg"
+      ],
+      "description": "Minimalismo elegante. Design contemporâneo para o profissional moderno.",
+      "features": [
+        "Frame de metal ultra-leve",
+        "Design minimalista",
+        "Logo Armani discreto",
+        "Ajuste nasal flexível"
+      ],
+      "availability": "Em estoque",
+      "tags": ["minimalista", "profissional", "leve"]
+    },
+    {
+      "id": "swarovski-sk5117",
+      "slug": "swarovski-sk5117",
+      "name": "Swarovski SK5117",
+      "category": "grau",
+      "brand": "Swarovski",
+      "price": 1299,
+      "images": [
+        "/assets/products/swarovski-sk5117-1.jpg",
+        "/assets/products/swarovski-sk5117-2.jpg"
+      ],
+      "description": "Brilho e sofisticação com cristais Swarovski. Feminino e delicado.",
+      "features": [
+        "Cristais Swarovski nas hastes",
+        "Frame de acetato",
+        "Design delicado",
+        "Exclusivo e elegante"
+      ],
+      "availability": "Em estoque",
+      "tags": ["brilhante", "feminino", "exclusivo"]
+    }
+  ],
+  "categories": [
+    {
+      "id": "grau",
+      "name": "Óculos de Grau",
+      "slug": "grau",
+      "description": "Armações para correção visual com estilo e conforto.",
+      "image": "/assets/grau-isolado.png"
+    },
+    {
+      "id": "sol",
+      "name": "Óculos de Sol",
+      "slug": "sol",
+      "description": "Proteção UV com design contemporâneo.",
+      "image": "/assets/solar-isolado.png"
+    }
+  ],
+  "brands": [
+    "Police",
+    "Ray-Ban",
+    "Yalea",
+    "Vogue",
+    "Guess",
+    "Just Cavalli",
+    "Ralph Lauren",
+    "Destaque",
+    "Evoke",
+    "Colcci",
+    "Platini",
+    "Aramis",
+    "Victor Hugo",
+    "Davidoff",
+    "Detroit",
+    "Fila",
+    "Ana Hickmann",
+    "Persol",
+    "Mormaii",
+    "Occhi",
+    "Emporio Armani",
+    "Swarovski",
+    "Versace"
+  ]
+}

@@ -1,0 +1,170 @@
+import "server-only";
+import { z } from "zod";
+import { db, audit, transaction } from "./db";
+import { canSell } from "./product";
+import type { Product, CartLine, CartItem } from "./types";
+
+export function getProducts(includeDrafts = false): Product[] {
+  return (
+    db().prepare("SELECT body FROM products ORDER BY id").all() as {
+      body: string;
+    }[]
+  )
+    .map((row) => JSON.parse(row.body) as Product)
+    .filter((p) => includeDrafts || p.published);
+}
+export function getProduct(id: string): Product | undefined {
+  const row = db().prepare("SELECT body FROM products WHERE id=?").get(id) as
+    { body: string } | undefined;
+  return row ? JSON.parse(row.body) : undefined;
+}
+const localImage = z
+  .string()
+  .regex(/^\/(assets\/|api\/media\/)[a-zA-Z0-9_./-]+$/)
+  .refine((v) => !v.includes(".."));
+const dimension = z.number().int().min(1).max(250).nullable();
+export const productSchema = z
+  .object({
+    revision: z.number().int().min(0),
+    id: z.string().regex(/^[a-z0-9-]{3,100}$/),
+    slug: z.string().regex(/^[a-z0-9-]{3,100}$/),
+    name: z.string().trim().min(3).max(150),
+    category: z.enum(["grau", "sol"]),
+    brand: z.string().trim().min(1).max(80),
+    description: z.string().trim().min(10).max(4000),
+    material: z.string().trim().max(120),
+    features: z.array(z.string().max(200)).max(20),
+    tags: z.array(z.string().max(50)).max(20),
+    images: z.array(localImage).max(12),
+    verified: z.boolean(),
+    priceConfirmed: z.boolean(),
+    published: z.boolean(),
+    variants: z
+      .array(
+        z.object({
+          id: z.string().regex(/^[a-zA-Z0-9-]{3,120}$/),
+          sku: z.string().trim().max(80),
+          label: z.string().trim().min(1).max(120),
+          color: z.string().trim().max(80),
+          lensWidth: dimension,
+          bridge: dimension,
+          temple: dimension,
+          priceCents: z.number().int().min(1).max(10000000),
+          stock: z.number().int().min(0).max(100000),
+        }),
+      )
+      .min(1)
+      .max(40),
+    package: z
+      .object({
+        width: z.number().positive().max(200),
+        height: z.number().positive().max(200),
+        length: z.number().positive().max(200),
+        weight: z.number().positive().max(50),
+      })
+      .nullable(),
+  })
+  .strict();
+export function saveProduct(input: unknown) {
+  return transaction(() => saveProductInTransaction(input));
+}
+function saveProductInTransaction(input: unknown) {
+  const p = productSchema.parse(input);
+  const previous = getProduct(p.id);
+  if (previous && (previous.revision || 0) !== p.revision)
+    throw new Error(
+      "Este produto mudou desde que você o abriu. Atualize o cadastro antes de salvar.",
+    );
+  if (new Set(p.variants.map((v) => v.id)).size !== p.variants.length)
+    throw new Error("Variantes com identificadores repetidos.");
+  const orders = db().prepare("SELECT body FROM orders").all() as {
+    body: string;
+  }[];
+  if (
+    previous &&
+    orders.some((row) => {
+      const o = JSON.parse(row.body);
+      return (
+        o.reserved &&
+        o.items.some(
+          (item: { productId: string; variantId: string }) =>
+            item.productId === p.id &&
+            !p.variants.some((v) => v.id === item.variantId),
+        )
+      );
+    })
+  )
+    throw new Error(
+      "Não remova uma variante que tem estoque reservado em pedido.",
+    );
+  if (
+    p.verified &&
+    (new Set(p.variants.map((v) => v.sku)).size !== p.variants.length ||
+      getProducts(true).some(
+        (other) =>
+          other.id !== p.id &&
+          other.variants.some(
+            (v) => v.sku && p.variants.some((variant) => variant.sku === v.sku),
+          ),
+      ))
+  )
+    throw new Error("Cada variante deve ter um SKU único.");
+  if (p.verified && !canSell({ ...p, published: true }))
+    throw new Error(
+      "Complete fotos, material, SKU, cor, medidas e preço confirmado para validar o produto.",
+    );
+  if (
+    getProducts(true).some(
+      (other) =>
+        other.id !== p.id &&
+        other.slug === p.slug &&
+        other.category === p.category,
+    )
+  )
+    throw new Error("Já existe um produto com este endereço.");
+  p.revision = (previous?.revision || 0) + 1;
+  db()
+    .prepare("INSERT OR REPLACE INTO products VALUES (?,?)")
+    .run(p.id, JSON.stringify(p));
+  audit("catalog_updated", { productId: p.id });
+  return p;
+}
+export const linesSchema = z
+  .array(
+    z
+      .object({
+        productId: z.string().max(100),
+        variantId: z.string().max(120),
+        quantity: z.number().int().min(1).max(10),
+      })
+      .strict(),
+  )
+  .min(1)
+  .max(30);
+export function resolveLines(input: unknown, selling = false): CartItem[] {
+  const lines: CartLine[] = linesSchema.parse(input);
+  if (
+    new Set(lines.map((l) => `${l.productId}:${l.variantId}`)).size !==
+    lines.length
+  )
+    throw new Error("Itens repetidos no carrinho.");
+  return lines.map((line) => {
+    const p = getProduct(line.productId);
+    const v = p?.variants.find((v) => v.id === line.variantId);
+    if (!p?.published || !v)
+      throw new Error("Um item do carrinho não está mais disponível.");
+    if (selling && (!canSell(p) || v.stock < line.quantity))
+      throw new Error(`Confira a disponibilidade de ${p.name}.`);
+    return {
+      ...line,
+      name: p.name,
+      brand: p.brand,
+      slug: p.slug,
+      category: p.category,
+      variantLabel: v.label,
+      priceCents: v.priceCents,
+      image: p.images[0] || "",
+      available: canSell(p) && v.stock >= line.quantity,
+    };
+  });
+}
