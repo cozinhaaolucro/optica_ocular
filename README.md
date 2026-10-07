@@ -30,4 +30,12 @@ Leia [OPERACAO-ECOMMERCE.md](OPERACAO-ECOMMERCE.md) para configuração, cadastr
 
 Esta versão requer uma instância Node com volume durável para banco e mídia. Hospedagem com disco efêmero ou múltiplas réplicas exige adaptar a persistência antes de usar a operação. Não é um site exportável somente como HTML estático.
 
+### Validação do catálogo na Vercel
+
+Na Vercel (`VERCEL=1`), home, listagens, fichas e o catálogo usado pelo carrinho leem os 33 produtos de referência incluídos no projeto, sem tentar criar SQLite no disco da função. Isso permite validar as telas publicadas antes de definir a persistência definitiva. As fotos continuam usando os placeholders previstos para os modelos sem cadastro real.
+
+O banco e o painel locais continuam disponíveis normalmente. Alterações feitas no banco local não são sincronizadas com esse catálogo publicado. Na Vercel, solicitações persistidas, edição administrativa e mídia enviada pelo painel precisam de armazenamento definitivo; esta versão não grava dados em memória ou `/tmp` nem simula confirmação de orçamento. `/api/health` retorna 503 enquanto a persistência não estiver disponível, mesmo com o catálogo público funcionando.
+
+Para reproduzir esse modo localmente, configure `OCULAR_CATALOG_PREVIEW=true` e reinicie o servidor. `npm run test:preview`, após o build, verifica as rotas públicas e as 33 fichas com um caminho de banco propositalmente impossível de escrever.
+
 Direção e andamento: [ROADMAP-ECOMMERCE.md](ROADMAP-ECOMMERCE.md). Evidências: [qa/ecommerce-implementation-verification.md](qa/ecommerce-implementation-verification.md). Os arquivos `legacy-v2`, `versao-1` e `research` preservam referências anteriores e ficam fora do lint do produto ativo.

@@ -2,6 +2,7 @@ import "server-only";
 import { ZodError } from "zod";
 import { createHash } from "node:crypto";
 import { rateLimit, audit } from "./db";
+import { PersistenceUnavailableError } from "./storage-mode";
 export function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   const allowed = new URL(process.env.OCULAR_SITE_URL || request.url).origin;
@@ -41,6 +42,8 @@ export function limited(request: Request, area: string, limit = 30) {
     throw new Error("Muitas tentativas. Aguarde um minuto e tente novamente.");
 }
 export function apiError(error: unknown, status = 400) {
+  if (error instanceof PersistenceUnavailableError)
+    return privateJson({ error: error.message }, 503);
   if (error instanceof ZodError)
     return Response.json(
       {

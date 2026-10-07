@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src tests scripts/setup-admin.mjs scripts/backup.mjs scripts/verify-http.mjs next.config.ts eslint.config.mjs --max-warnings 0",
-    "test": "node --conditions=react-server --import tsx --test tests/commerce.test.mts",
+    "lint": "eslint src tests scripts/setup-admin.mjs scripts/backup.mjs scripts/verify-http.mjs scripts/verify-preview.mjs next.config.ts eslint.config.mjs --max-warnings 0",
+    "test": "node --conditions=react-server --import tsx --test tests/commerce.test.mts tests/catalog-preview.test.mts",
     "test:http": "node scripts/verify-http.mjs",
+    "test:preview": "node scripts/verify-preview.mjs",
     "admin:setup": "node scripts/setup-admin.mjs",
     "backup": "node --env-file-if-exists=.env.local scripts/backup.mjs",
     "format": "prettier --write src tests scripts/setup-admin.mjs scripts/backup.mjs scripts/verify-http.mjs next.config.ts eslint.config.mjs package.json"

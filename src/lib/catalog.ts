@@ -2,9 +2,13 @@ import "server-only";
 import { z } from "zod";
 import { db, audit, transaction } from "./db";
 import { canSell } from "./product";
+import { referenceProducts } from "./catalog-seed";
+import { isCatalogPreview } from "./storage-mode";
 import type { Product, CartLine, CartItem } from "./types";
 
 export function getProducts(includeDrafts = false): Product[] {
+  if (isCatalogPreview())
+    return referenceProducts().sort((a, b) => a.id.localeCompare(b.id));
   return (
     db().prepare("SELECT body FROM products ORDER BY id").all() as {
       body: string;
@@ -14,6 +18,7 @@ export function getProducts(includeDrafts = false): Product[] {
     .filter((p) => includeDrafts || p.published);
 }
 export function getProduct(id: string): Product | undefined {
+  if (isCatalogPreview()) return referenceProducts().find((p) => p.id === id);
   const row = db().prepare("SELECT body FROM products WHERE id=?").get(id) as
     { body: string } | undefined;
   return row ? JSON.parse(row.body) : undefined;

@@ -2,11 +2,14 @@ import "server-only";
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import seed from "@/data/products-data.json";
-import type { Product } from "./types";
+import { referenceProducts } from "./catalog-seed";
+import { isCatalogPreview, PersistenceUnavailableError } from "./storage-mode";
 
 let connection: DatabaseSync | undefined;
 export function db() {
+  // A validation deployment can browse the catalog, but must not store customer
+  // data or accept admin writes on ephemeral function storage.
+  if (isCatalogPreview()) throw new PersistenceUnavailableError();
   if (connection) return connection;
   // This file is runtime data on a persistent volume, never a deployment asset.
   const path = resolve(
@@ -32,37 +35,7 @@ export function db() {
       const insert = conn.prepare(
         "INSERT OR IGNORE INTO products VALUES (?,?)",
       );
-      for (const p of seed.products) {
-        const product: Product = {
-          revision: 0,
-          id: p.id,
-          slug: p.slug,
-          name: p.name,
-          brand: p.brand,
-          category: p.category as Product["category"],
-          description: p.description,
-          material: "",
-          features: p.features,
-          tags: p.tags,
-          images: [],
-          verified: false,
-          priceConfirmed: false,
-          published: true,
-          package: null,
-          variants: [
-            {
-              id: `${p.id}-default`,
-              sku: "",
-              label: "Modelo a confirmar",
-              color: "",
-              lensWidth: null,
-              bridge: null,
-              temple: null,
-              priceCents: Math.round(p.price * 100),
-              stock: 0,
-            },
-          ],
-        };
+      for (const product of referenceProducts()) {
         insert.run(product.id, JSON.stringify(product));
       }
       conn.exec("COMMIT");
