@@ -1,0 +1,282 @@
+[
+  {
+    "page": "oculos",
+    "viewport": 320,
+    "clientWidth": 305,
+    "overflow": [],
+    "scrollWidth": 305
+  },
+  {
+    "page": "oculos-de-grau",
+    "viewport": 320,
+    "clientWidth": 305,
+    "overflow": [],
+    "scrollWidth": 305
+  },
+  {
+    "page": "oculos-de-sol",
+    "viewport": 320,
+    "clientWidth": 305,
+    "overflow": [],
+    "scrollWidth": 305
+  },
+  {
+    "page": "lentes",
+    "viewport": 320,
+    "clientWidth": 305,
+    "overflow": [],
+    "scrollWidth": 305
+  },
+  {
+    "page": "sobre",
+    "viewport": 320,
+    "clientWidth": 305,
+    "overflow": [],
+    "scrollWidth": 305
+  },
+  {
+    "page": "visite",
+    "viewport": 320,
+    "clientWidth": 305,
+    "overflow": [],
+    "scrollWidth": 305
+  },
+  {
+    "page": "duvidas",
+    "viewport": 320,
+    "clientWidth": 305,
+    "overflow": [],
+    "scrollWidth": 305
+  },
+  {
+    "page": "privacidade",
+    "viewport": 320,
+    "clientWidth": 305,
+    "overflow": [],
+    "scrollWidth": 305
+  },
+  {
+    "page": "oculos",
+    "viewport": 390,
+    "clientWidth": 375,
+    "overflow": [],
+    "scrollWidth": 375
+  },
+  {
+    "page": "oculos-de-grau",
+    "viewport": 390,
+    "clientWidth": 375,
+    "overflow": [],
+    "scrollWidth": 375
+  },
+  {
+    "page": "oculos-de-sol",
+    "viewport": 390,
+    "clientWidth": 375,
+    "overflow": [],
+    "scrollWidth": 375
+  },
+  {
+    "page": "lentes",
+    "viewport": 390,
+    "clientWidth": 375,
+    "overflow": [],
+    "scrollWidth": 375
+  },
+  {
+    "page": "sobre",
+    "viewport": 390,
+    "clientWidth": 375,
+    "overflow": [],
+    "scrollWidth": 375
+  },
+  {
+    "page": "visite",
+    "viewport": 390,
+    "clientWidth": 375,
+    "overflow": [],
+    "scrollWidth": 375
+  },
+  {
+    "page": "duvidas",
+    "viewport": 390,
+    "clientWidth": 375,
+    "overflow": [],
+    "scrollWidth": 375
+  },
+  {
+    "page": "privacidade",
+    "viewport": 390,
+    "clientWidth": 375,
+    "overflow": [],
+    "scrollWidth": 375
+  },
+  {
+    "page": "oculos",
+    "viewport": 768,
+    "clientWidth": 753,
+    "overflow": [],
+    "scrollWidth": 753
+  },
+  {
+    "page": "oculos-de-grau",
+    "viewport": 768,
+    "clientWidth": 753,
+    "overflow": [],
+    "scrollWidth": 753
+  },
+  {
+    "page": "oculos-de-sol",
+    "viewport": 768,
+    "clientWidth": 753,
+    "overflow": [],
+    "scrollWidth": 753
+  },
+  {
+    "page": "lentes",
+    "viewport": 768,
+    "clientWidth": 753,
+    "overflow": [],
+    "scrollWidth": 753
+  },
+  {
+    "page": "sobre",
+    "viewport": 768,
+    "clientWidth": 753,
+    "overflow": [],
+    "scrollWidth": 753
+  },
+  {
+    "page": "visite",
+    "viewport": 768,
+    "clientWidth": 753,
+    "overflow": [],
+    "scrollWidth": 753
+  },
+  {
+    "page": "duvidas",
+    "viewport": 768,
+    "clientWidth": 753,
+    "overflow": [],
+    "scrollWidth": 753
+  },
+  {
+    "page": "privacidade",
+    "viewport": 768,
+    "clientWidth": 753,
+    "overflow": [],
+    "scrollWidth": 753
+  },
+  {
+    "page": "oculos",
+    "viewport": 1024,
+    "clientWidth": 1009,
+    "overflow": [],
+    "scrollWidth": 1009
+  },
+  {
+    "page": "oculos-de-grau",
+    "viewport": 1024,
+    "clientWidth": 1009,
+    "overflow": [],
+    "scrollWidth": 1009
+  },
+  {
+    "page": "oculos-de-sol",
+    "viewport": 1024,
+    "clientWidth": 1009,
+    "overflow": [],
+    "scrollWidth": 1009
+  },
+  {
+    "page": "lentes",
+    "viewport": 1024,
+    "clientWidth": 1009,
+    "overflow": [],
+    "scrollWidth": 1009
+  },
+  {
+    "page": "sobre",
+    "viewport": 1024,
+    "clientWidth": 1009,
+    "overflow": [],
+    "scrollWidth": 1009
+  },
+  {
+    "page": "visite",
+    "viewport": 1024,
+    "clientWidth": 1009,
+    "overflow": [],
+    "scrollWidth": 1009
+  },
+  {
+    "page": "duvidas",
+    "viewport": 1024,
+    "clientWidth": 1009,
+    "overflow": [],
+    "scrollWidth": 1009
+  },
+  {
+    "page": "privacidade",
+    "viewport": 1024,
+    "clientWidth": 1009,
+    "overflow": [],
+    "scrollWidth": 1009
+  },
+  {
+    "page": "oculos",
+    "viewport": 1440,
+    "clientWidth": 1425,
+    "overflow": [],
+    "scrollWidth": 1425
+  },
+  {
+    "page": "oculos-de-grau",
+    "viewport": 1440,
+    "clientWidth": 1425,
+    "overflow": [],
+    "scrollWidth": 1425
+  },
+  {
+    "page": "oculos-de-sol",
+    "viewport": 1440,
+    "clientWidth": 1425,
+    "overflow": [],
+    "scrollWidth": 1425
+  },
+  {
+    "page": "lentes",
+    "viewport": 1440,
+    "clientWidth": 1425,
+    "overflow": [],
+    "scrollWidth": 1425
+  },
+  {
+    "page": "sobre",
+    "viewport": 1440,
+    "clientWidth": 1425,
+    "overflow": [],
+    "scrollWidth": 1425
+  },
+  {
+    "page": "visite",
+    "viewport": 1440,
+    "clientWidth": 1425,
+    "overflow": [],
+    "scrollWidth": 1425
+  },
+  {
+    "page": "duvidas",
+    "viewport": 1440,
+    "clientWidth": 1425,
+    "overflow": [],
+    "scrollWidth": 1425
+  },
+  {
+    "page": "privacidade",
+    "viewport": 1440,
+    "clientWidth": 1425,
+    "overflow": [],
+    "scrollWidth": 1425
+  }
+]

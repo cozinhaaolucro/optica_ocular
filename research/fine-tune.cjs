@@ -1,0 +1,27 @@
+const fs=require('fs');
+let h=fs.readFileSync('site/index.html','utf8');
+h=h.replace(/<div class="topbar">[\s\S]*?<\/div>/,'');
+h=h.replace(/<p class="eyebrow"><span class="line"><\/span> ÓPTICA OCULAR · DESDE 1990<\/p>/,'<p class="eyebrow">ÓCULOS E LENTES EM CURITIBA</p>');
+h=h.replace('<p class="intro">Enxergar bem. Se reconhecer.<br>Sentir que a escolha foi sua.</p><p class="hero-description">Armações, lentes e um olhar atento a você.<br>Encontre seus próximos óculos com a gente.</p>','<p class="intro">Armações que expressam sua personalidade.<br>Lentes escolhidas para a sua rotina.</p>');
+h=h.replace(/<div class="hero-foot">[\s\S]*?<\/div>/,'');
+h=h.replace(/<div class="image-label">[\s\S]*?<\/div>/,'').replace(/<span class="vertical-label">[\s\S]*?<\/span>/,'');
+h=h.replace('Aqui em Curitiba.','Nossa loja em Curitiba.').replace('Do seu jeito.','Atendimento personalizado.');
+h=h.replace(/(?:01|02|03|04) — /g,'');
+h=h.replace(/<span class="tag">[\s\S]*?<\/span>/g,'').replace(/<span class="photo-action"[^>]*>[\s\S]*?<\/span>/g,'').replace(/<span>0[12] \/<\/span>/g,'');
+h=h.replace('<h3>Seu olhar, de perto.</h3>','<h3>Óculos de grau</h3>').replace('<h3>O sol pede presença.</h3>','<h3>Óculos de sol</h3>');
+h=h.replace('<p>ÓCULOS DE GRAU <span>Leve sua personalidade para a rotina.</span></p>','<p>Leve sua personalidade para a rotina.</p>').replace('<p>ÓCULOS DE SOL <span>Um novo ponto de vista para sair por aí.</span></p>','<p>Estilo para os dias ao ar livre.</p>');
+h=h.replace(/<div class="optical-orbit"[\s\S]*?<\/div>/,'').replace(/<span class="lens-number"[^>]*>.*?<\/span>/,'');
+h=h.replace(/<ol class="care-steps">[\s\S]*?<\/ol>/,'');
+h=h.replace('<legend>Vamos encontrar o seu próximo olhar.</legend><p class="form-subtitle">O que você procura hoje?</p>','<legend>O que você procura?</legend>');
+h=h.replace(/<div class="story-plaque">[\s\S]*?<\/div>/,'');
+h=h.replace('A GENTE SE VÊ POR AQUI','VISITE A OCULAR');
+h=h.replace(/<div class="footer-signature"[\s\S]*?<\/div>/,'');
+// Keep arrows only where they signal an interactive category or primary action.
+h=h.replace(/(<a class="text-link[^>]*>[\s\S]*?) <span aria-hidden="true">↗<\/span>(<\/a>)/g,'$1$2');
+h=h.replace(/(Instagram|Facebook|Avaliações no Google) ↗/g,'$1').replace('(41) 99750-2091 ↗','(41) 99750-2091');
+h=h.replace(/(<a class="floating-contact"[\s\S]*?<\/svg>)<span>Vamos conversar<\/span>/,'$1');
+h=h.replace(/<img src="assets\/logo-original.jpg" width="58" height="48" alt="">/g,'<span class="logo-frame"><img src="assets/logo-original.jpg" width="486" height="400" alt=""></span>');
+fs.writeFileSync('site/index.html',h);
+let js=fs.readFileSync('site/app.js','utf8');
+js=js.replace("['.lens-number','h3','p','.lens-note'].forEach((selector,index)=>panel.querySelector(selector).textContent=data[index]);", "['h3','p','.lens-note'].forEach((selector,index)=>panel.querySelector(selector).textContent=data[index+1]);");
+fs.writeFileSync('site/app.js',js);

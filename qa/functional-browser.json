@@ -1,0 +1,29 @@
+{
+  "navigation": [
+    {
+      "menu": "Óculos",
+      "url": "http://localhost:4173/oculos.html",
+      "passed": true
+    },
+    {
+      "menu": "Lentes",
+      "url": "http://localhost:4173/lentes.html",
+      "passed": true
+    },
+    {
+      "menu": "Nossa história",
+      "url": "http://localhost:4173/sobre.html",
+      "passed": true
+    },
+    {
+      "menu": "Visite a loja",
+      "url": "http://localhost:4173/visite.html",
+      "passed": true
+    }
+  ],
+  "lensesKeyboard": true,
+  "faq": "Busca sem acento, filtros combinados, estado vazio e limpar busca verificados.",
+  "contact": "Mensagem e URL geradas com nome, interesse e caracteres especiais. Nenhuma mensagem enviada.",
+  "preferences": "Seleção de estilo atualiza texto e URL do WhatsApp.",
+  "mobileMenu": "Abertura, fechamento por Escape, retorno de foco e bloqueio de rolagem verificados."
+}

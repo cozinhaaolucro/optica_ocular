@@ -1,0 +1,11 @@
+{
+  "pages": 10,
+  "localReferences": 317,
+  "checks": [
+    "HTML, imagens, recursos locais, âncoras, IDs, títulos e links externos",
+    "Home idêntica à original exceto quatro href do menu; 55 recursos originais idênticos ao registro SHA-256",
+    "HTTP: páginas, HEAD, 404, recursos privados, redirect, MIME WebP, métodos e caminho inválido"
+  ],
+  "homeVisualAndContentUnchanged": true,
+  "homeNavigationLinks": 4
+}

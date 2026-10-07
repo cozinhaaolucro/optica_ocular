@@ -1,0 +1,2 @@
+const fs=require('fs');
+(async()=>{for(const [name,id] of Object.entries({hero:'ee4444bd8a2748188a2c3b2ffaeabe8c.jpg',portrait:'de528ec48fd74cdba82d1230da15192a.jpg',glasses:'11062b_8bb9e2c7326248bf8c064a990a9dcea5~mv2.jpg'})){const r=await fetch('https://static.wixstatic.com/media/'+id+'/v1/fit/w_1800,h_1400,q_85/'+name+'.jpg');if(!r.ok)throw Error(r.status);fs.writeFileSync('site/assets/'+name+'.jpg',Buffer.from(await r.arrayBuffer())); console.log(name,fs.statSync('site/assets/'+name+'.jpg').size);}})();
