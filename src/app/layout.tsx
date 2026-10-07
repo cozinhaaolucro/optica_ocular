@@ -16,11 +16,6 @@ export const metadata: Metadata = {
   },
   description:
     "Conheça armações de grau, óculos de sol e lentes com orientação especializada. Óptica Ocular, em Curitiba desde 1990.",
-  icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
-    apple: "/favicon.png",
-  },
   openGraph: {
     type: "website",
     locale: "pt_BR",
