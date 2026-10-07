@@ -32,6 +32,8 @@ Após esses ajustes, lint, build com `VERCEL=1`, 17 testes, 8 verificações HTT
 
 A tentativa de conferência pelo navegador foi bloqueada pela política de URL da ferramenta. Não foi contornada. Esses resultados certificam as verificações automatizadas descritas, sem afirmar uma conferência visual ou de teclado em navegador.
 
-Esta entrega prepara a correção no código local. O domínio da Vercel só receberá a mudança após um novo deploy desse código. Ainda não foi fornecido o endereço publicado para conferir a resposta do ambiente remoto; a reprodução acima verifica o cenário localmente, sem certificar o deploy existente.
+O primeiro push (`43c6842`) teve deploy de produção concluído com sucesso pela Vercel. A URL pública informada pelo repositório é [optica-ocular.vercel.app](https://optica-ocular.vercel.app). A conferência HTTP nesse domínio retornou 200 para home, duas categorias, carrinho, lentes e uma ficha de cada categoria com conteúdo de detalhe presente. `/api/catalog` respondeu com os 33 produtos e pagamento desativado. Isso verifica respostas e conteúdo do servidor publicado, sem afirmar inspeção visual do navegador.
+
+A checagem remota do GitHub encontrou uma inconsistência preexistente do lockfile no `npm ci` com npm 11.19.0: faltavam as entradas raiz de `@emnapi/core` e `@emnapi/runtime`. O lockfile foi reparado em diretório isolado com essa versão do npm, sem mudar versões já fixadas. A simulação de instalação limpa para Linux passou, e a auditoria de dependências de produção continuou reportando zero vulnerabilidades. A correção segue em um segundo push para executar novamente o CI e o deploy.
 
 Depois da aprovação do cliente, adaptar a persistência definitiva para liberar painel, uploads e solicitação de orçamento na hospedagem escolhida. A escolha do provedor de pagamento continua na última etapa.
