@@ -2,11 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { whatsapp } from "@/lib/product";
 export default function SiteFooter() {
+  const location = "Óptica Ocular, Rua Bispo Dom José, 2655, Curitiba - PR";
   return (
     <footer className="store-footer">
       <div className="store-footer-top">
-        <div>
-          <Link href="/" aria-label="Óptica Ocular, início" className="footer-brand">
+        <div className="store-footer-brand">
+          <Link
+            href="/"
+            aria-label="Óptica Ocular, início"
+            className="footer-brand"
+          >
             <Image
               src="/assets/logo-white.png"
               width={100}
@@ -32,7 +37,7 @@ export default function SiteFooter() {
             Horários e localização
           </Link>
         </div>
-        <div>
+        <div className="store-footer-contact">
           <p className="eyebrow">Conte com a gente</p>
           <a
             href={whatsapp(
@@ -46,6 +51,26 @@ export default function SiteFooter() {
           <a href="tel:+554130169654">Telefone · (41) 3016-9654</a>
           <a href="mailto:optica-ocular@hotmail.com">
             optica-ocular@hotmail.com
+          </a>
+        </div>
+        <div className="store-footer-map">
+          <p className="eyebrow">A loja no mapa</p>
+          <iframe
+            title="Localização da Óptica Ocular no Google Maps"
+            src={`https://www.google.com/maps?q=${encodeURIComponent(location)}&z=16&hl=pt-BR&output=embed`}
+            width="400"
+            height="240"
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-link store-footer-route"
+          >
+            Como chegar
           </a>
         </div>
       </div>

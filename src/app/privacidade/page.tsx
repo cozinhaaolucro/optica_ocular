@@ -44,6 +44,11 @@ export default function Page() {
           serviços seguem suas próprias políticas. As fontes e imagens do site
           são servidas pela própria aplicação.
         </p>
+        <p>
+          O mapa do rodapé é carregado pelo Google Maps ao se aproximar dessa
+          área da página. Esse serviço recebe dados técnicos de conexão, como o
+          endereço IP, e segue a política de privacidade do Google.
+        </p>
       </section>
       <section>
         <h2>Medição técnica</h2>
@@ -70,7 +75,7 @@ export default function Page() {
           procedimento e os registros que precisem ser mantidos para a operação.
         </p>
       </section>
-      <p className="store-muted">Atualizado em 7 de outubro de 2026.</p>
+      <p className="store-muted">Atualizado em 8 de outubro de 2026.</p>
       <Link href="/duvidas" className="text-link">
         Mais informações
       </Link>
