@@ -388,6 +388,14 @@
   line-height: 1.65;
   margin-bottom: 14px;
 }
+.store-price-was {
+  display: block;
+  color: var(--color-text-muted);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
 .store-card-link {
   display: flex;
   align-items: center;

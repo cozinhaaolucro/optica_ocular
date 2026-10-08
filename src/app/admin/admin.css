@@ -596,6 +596,59 @@
 .admin-lens-adjust input {
   width: 85px;
 }
+.admin-lens-adjust select {
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #dcd7ce;
+  border-radius: 3px;
+  color: inherit;
+}
+.admin-lens-bulk {
+  margin-bottom: 24px;
+}
+.admin-lens-bulk fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.admin-lens-bulk legend {
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.admin-lens-bulk .admin-lens-adjust {
+  margin-bottom: 0;
+}
+.admin-lens-percent {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.admin-lens-bulk > p,
+.admin-lens-hint {
+  font-size: 11px;
+  margin: 12px 0;
+}
+.admin-lens-filters select {
+  max-width: min(100%, 270px);
+}
+.admin-lens-switch {
+  white-space: nowrap;
+  gap: 8px;
+  min-height: 44px;
+}
+.admin-lens-hidden {
+  background: #faf9f6;
+}
+.admin-lens-price[aria-invalid="true"] {
+  border-color: #b84836;
+}
+.admin-lens-save .admin-form-actions {
+  margin: 0;
+}
 .admin-lens-save {
   position: sticky;
   bottom: 12px;

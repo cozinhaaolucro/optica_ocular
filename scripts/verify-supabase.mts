@@ -6,7 +6,12 @@ import { query, transaction, closePersistence } from "../src/lib/persistence";
 import { getProducts, saveProduct, getProduct } from "../src/lib/catalog";
 import { createOrder, updateService, publicOrder } from "../src/lib/orders";
 import { updateInventory } from "../src/lib/admin";
-import { getLenses, saveLensPrices } from "../src/lib/lenses";
+import {
+  getLenses,
+  getLensData,
+  saveLensPrices,
+  updateLensGroup,
+} from "../src/lib/lenses";
 import { saveMedia, mediaBucket, supabaseUrl } from "../src/lib/media";
 
 const rollback = new Error("verification-rollback");
@@ -38,6 +43,7 @@ try {
         revision: product.revision,
         stock: 5,
         priceCents: 49990,
+        promotionPriceCents: 39990,
         reason: "Verificacao em transacao revertida",
       });
       assert.equal((await getProduct(id))!.variants[0].stock, 5);
@@ -55,7 +61,7 @@ try {
         idempotencyKey: randomUUID(),
       });
       assert(accessToken);
-      assert.equal(order.totalCents, 49990);
+      assert.equal(order.totalCents, 39990);
       const updated = await updateService(order.id, {
         revision: order.revision,
         serviceStatus: "contacted",
@@ -65,9 +71,41 @@ try {
       const lenses = await getLenses();
       await saveLensPrices({
         revision: lenses.revision,
-        changes: [{ id: lenses.rows[0].id, priceCents: 123456 }],
+        changes: [
+          {
+            id: lenses.rows[0].id,
+            priceCents: 123456,
+            promotionPriceCents: 99900,
+            enabled: false,
+          },
+        ],
       });
       assert.equal((await getLenses()).rows[0].priceCents, 123456);
+      let current = await getLenses();
+      assert.equal(current.rows[0].promotionPriceCents, 99900);
+      assert.equal(current.rows[0].enabled, false);
+      const brand = current.rows[0].brand;
+      const count = current.rows.filter((r) => r.brand === brand).length;
+      await updateLensGroup({
+        revision: current.revision,
+        expectedCount: count,
+        filter: { brand },
+        action: { type: "visibility", enabled: false },
+      });
+      assert.equal((await getLensData())[brand], undefined);
+      current = await getLenses();
+      await updateLensGroup({
+        revision: current.revision,
+        expectedCount: count,
+        filter: { brand },
+        action: { type: "visibility", enabled: true },
+      });
+      const row = current.rows[0];
+      const config = (await getLensData())[brand][row.category][row.line][
+        row.option
+      ][0];
+      assert.equal(config.p, 999);
+      assert.equal(config.regularPrice, 1234.56);
       throw rollback;
     });
   } catch (error) {
@@ -78,7 +116,7 @@ try {
     before,
   );
   console.log(
-    "OK Supabase: cadastro, estoque, atendimento privado e lentes; transacao revertida.",
+    "OK Supabase: cadastro, estoque, atendimento, promocoes e ativacao de lentes; transacao revertida.",
   );
   imageName = `${randomUUID()}.webp`;
   const bytes = await sharp({

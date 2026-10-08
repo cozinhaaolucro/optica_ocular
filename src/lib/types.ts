@@ -7,6 +7,7 @@ export interface Variant {
   bridge: number | null;
   temple: number | null;
   priceCents: number;
+  promotionPriceCents?: number | null;
   stock: number;
 }
 export interface Product {

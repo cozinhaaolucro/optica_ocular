@@ -14,7 +14,9 @@ Salve antes de sair da ficha. Se outra pessoa atualizar o mesmo modelo, o painel
 
 ## Preços e estoque
 
-Encontre a variante e escolha **Ajustar**. Informe preço em reais, estoque inteiro e o motivo da mudança. O histórico guarda o saldo anterior e o novo. Estoque zero continua sendo zero; valores demonstrativos não significam disponibilidade real.
+Encontre a variante e escolha **Ajustar**. Informe preço normal em reais, estoque inteiro e o motivo da mudança. Para uma oferta, preencha **Preço promocional** com um valor menor que o normal. Deixe esse campo vazio para encerrar a promoção. Esse controle também aparece em cada variante da ficha do Catálogo. O filtro **Em promoção** ajuda a revisar as ofertas.
+
+A loja mostra o preço normal riscado e o promocional. Carrinho, ordenação por preço e novas solicitações usam o valor promocional; solicitações anteriores preservam seus valores. As promoções ficam ativas até serem encerradas pela equipe, sem prazo automático. O histórico guarda ajustes de preço, promoção e estoque. Estoque zero continua sendo zero; valores demonstrativos não significam disponibilidade real.
 
 ## Atendimentos e clientes
 
@@ -26,9 +28,13 @@ Os links de WhatsApp, telefone e e-mail abrem o contato para a equipe. Nenhuma m
 
 ## Lentes
 
-Filtre por marca ou procure linha, material, índice e tratamento. Edite os valores desejados e escolha **Salvar alterações**. Os preços salvos entram no simulador nas próximas consultas.
+Filtre por marca, tipo, linha e situação, ou procure material, índice e tratamento. Cada configuração tem **Preço normal**, **Promocional** e a caixa **Ativa**. Desmarque para ocultar a opção no simulador, preservando preços e cadastro. Edite e escolha **Salvar alterações**. **Descartar** remove somente alterações ainda não salvas.
 
-Para reajustar uma marca ou linha, filtre primeiro e aplique o percentual aos resultados. Confira os valores antes de salvar. O limite é de 1.000 configurações por lote. **Descartar** remove somente alterações ainda não salvas. As linhas e combinações técnicas continuam seguindo a tabela do projeto; novos produtos de lentes exigem atualização dessa fonte.
+Para mudar uma marca ou linha inteira, filtre primeiro e use **Ações nos resultados filtrados**: ativar, ocultar, aplicar desconto, encerrar promoções ou reajustar preço normal. **Aplicar ao filtro** mostra a confirmação com a quantidade e o escopo; ao confirmar, publica o lote inteiro. O lote pode abranger todas as configurações de uma marca. Salve ou descarte edições individuais antes de usar esse controle.
+
+O desconto percentual usa o preço normal e substitui promoções do filtro. Não ativa configurações ocultas. O simulador mostra o valor normal riscado e o promocional por par; marcas, linhas e opções sem configurações ativas desaparecem da seleção. Os dados são renovados ao iniciar uma simulação. Para encerrar uma oferta individual, deixe **Promocional** vazio. O painel impede promoções iguais ou superiores ao preço normal e preserva o lote inteiro se houver conflito ou valor inválido.
+
+As linhas e combinações técnicas continuam seguindo a tabela do projeto; novos produtos de lentes exigem atualização dessa fonte.
 
 ## Histórico e operação
 

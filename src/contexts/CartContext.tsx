@@ -6,7 +6,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { canSell } from "@/lib/product";
+import { canSell, sellingPrice } from "@/lib/product";
 import type { Product, CartLine, CartItem } from "@/lib/types";
 type Snapshot = {
   lines: CartLine[];
@@ -118,7 +118,7 @@ function cartItems(): CartItem[] {
       slug: p.slug,
       category: p.category,
       variantLabel: v.label,
-      priceCents: v.priceCents,
+      priceCents: sellingPrice(v),
       image: p.images[0] || "",
       available: canSell(p) && v.stock >= l.quantity,
     };

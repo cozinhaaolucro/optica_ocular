@@ -22,12 +22,12 @@ const {
   updateFulfillment,
   publicOrder,
 } = await import("../src/lib/orders");
-const { canSell } = await import("../src/lib/product");
+const { canSell, sellingPrice, minPrice } = await import("../src/lib/product");
 const { checkPassword, hashToken } = await import("../src/lib/auth");
 const { readJson, sameOrigin } = await import("../src/lib/http");
 const { updateInventory, setPublished } = await import("../src/lib/admin");
 const { updateService } = await import("../src/lib/orders");
-const { getLenses, getLensData, saveLensPrices } =
+const { getLenses, getLensData, saveLensPrices, updateLensGroup } =
   await import("../src/lib/lenses");
 const { csv } = await import("../src/lib/admin-utils");
 
@@ -533,6 +533,246 @@ test("lens updates persist in the simulator and reject stale or unknown configur
     /inválida/,
   );
   assert.equal((await getLenses()).rows[0].priceCents, 123456);
+});
+
+test("product promotions price quotes consistently and preserve historical totals after ending", async () => {
+  let product = await fixture();
+  product.variants[0].promotionPriceCents = 24990;
+  product = await saveProduct(product);
+  assert.equal(sellingPrice(product.variants[0]), 24990);
+  assert.equal(minPrice(product), 24990);
+  assert.equal((await resolveLines(lines(product)))[0].priceCents, 24990);
+  const { order } = await createOrder(input(product, 2));
+  assert.equal(order.totalCents, 49980);
+  product.variants[0].promotionPriceCents = null;
+  product = await saveProduct(product);
+  assert.equal((await resolveLines(lines(product)))[0].priceCents, 34990);
+  assert.equal((await getOrder(order.id))!.totalCents, 49980);
+  assert.equal((await getOrder(order.id))!.items[0].priceCents, 24990);
+});
+
+test("invalid product promotions and normal prices below an existing offer cannot be saved", async () => {
+  let product = await fixture();
+  for (const promotion of [0, -1, 34990, 50000, 2.5])
+    await assert.rejects(() =>
+      saveProduct({
+        ...product,
+        variants: [{ ...product.variants[0], promotionPriceCents: promotion }],
+      }),
+    );
+  product.variants[0].promotionPriceCents = 24990;
+  product = await saveProduct(product);
+  const adjustment = {
+    productId: product.id,
+    variantId: product.variants[0].id,
+    revision: product.revision,
+    stock: 3,
+    priceCents: 19990,
+    reason: "Conferencia promocional",
+  };
+  await assert.rejects(() => updateInventory(adjustment));
+  assert.equal((await getProduct(product.id))!.variants[0].priceCents, 34990);
+  const ended = await updateInventory({
+    ...adjustment,
+    promotionPriceCents: null,
+  });
+  assert.equal(sellingPrice(ended.variants[0]), 19990);
+  const other = {
+    ...ended.variants[0],
+    id: "other-variant",
+    priceCents: 39990,
+    promotionPriceCents: 9990,
+  };
+  assert.equal(
+    minPrice({ ...ended, variants: [...ended.variants, other] }),
+    9990,
+  );
+});
+
+test("lens visibility preserves IDs and promotions while removing empty public branches", async () => {
+  const before = await getLenses();
+  const first = before.rows[0];
+  const second = before.rows.find(
+    (r) =>
+      r.id !== first.id &&
+      r.brand === first.brand &&
+      r.category === first.category &&
+      r.line === first.line &&
+      r.option === first.option,
+  )!;
+  assert(second);
+  await saveLensPrices({
+    revision: before.revision,
+    changes: [
+      {
+        id: first.id,
+        priceCents: 50000,
+        promotionPriceCents: 40000,
+        enabled: false,
+      },
+      { id: second.id, priceCents: 60000, promotionPriceCents: 30000 },
+    ],
+  });
+  let data = await getLensData();
+  assert.equal(
+    data[first.brand][first.category][first.line][first.option][0].p,
+    300,
+  );
+  assert.equal(
+    data[first.brand][first.category][first.line][first.option][0].regularPrice,
+    600,
+  );
+  let current = await getLenses();
+  assert.equal(current.rows[0].id, first.id);
+  assert.equal(current.rows[0].enabled, false);
+  assert.equal(current.rows[0].promotionPriceCents, 40000);
+  assert.equal(current.rows.length, before.rows.length);
+  await saveLensPrices({
+    revision: current.revision,
+    changes: [{ id: first.id, enabled: true, promotionPriceCents: null }],
+  });
+  data = await getLensData();
+  assert.equal(
+    data[first.brand][first.category][first.line][first.option][0].p,
+    500,
+  );
+  assert.equal(
+    data[first.brand][first.category][first.line][first.option][0].regularPrice,
+    undefined,
+  );
+  current = await getLenses();
+  const lineRows = current.rows.filter(
+    (r) =>
+      r.brand === first.brand &&
+      r.category === first.category &&
+      r.line === first.line,
+  );
+  await updateLensGroup({
+    revision: current.revision,
+    expectedCount: lineRows.length,
+    filter: { brand: first.brand, category: first.category, line: first.line },
+    action: { type: "visibility", enabled: false },
+  });
+  data = await getLensData();
+  assert.equal(data[first.brand]?.[first.category]?.[first.line], undefined);
+  current = await getLenses();
+  await updateLensGroup({
+    revision: current.revision,
+    expectedCount: lineRows.length,
+    filter: { brand: first.brand, category: first.category, line: first.line },
+    action: { type: "visibility", enabled: true },
+  });
+});
+
+test("whole lens brands over 1000 configurations can be hidden and promoted atomically", async () => {
+  let current = await getLenses();
+  const brand = "ZEISS";
+  const rows = current.rows.filter((r) => r.brand === brand);
+  assert(rows.length > 1000);
+  const bulk = {
+    revision: current.revision,
+    expectedCount: rows.length,
+    filter: { brand },
+    action: { type: "visibility", enabled: false },
+  };
+  await updateLensGroup(bulk);
+  assert.equal((await getLensData())[brand], undefined);
+  current = await getLenses();
+  assert(
+    current.rows.filter((r) => r.brand === brand).every((r) => !r.enabled),
+  );
+  await assert.rejects(
+    () =>
+      updateLensGroup({
+        ...bulk,
+        action: { type: "visibility", enabled: true },
+      }),
+    /mudou/,
+  );
+  await updateLensGroup({
+    ...bulk,
+    revision: current.revision,
+    action: { type: "promotion", percent: 15 },
+  });
+  current = await getLenses();
+  assert.equal((await getLensData())[brand], undefined);
+  assert(
+    current.rows
+      .filter((r) => r.brand === brand)
+      .every((r) => r.promotionPriceCents === Math.round(r.priceCents * 0.85)),
+  );
+  assert(
+    current.rows
+      .filter((r) => r.brand !== brand)
+      .some((r) => r.promotionPriceCents === null),
+  );
+  await updateLensGroup({
+    ...bulk,
+    revision: current.revision,
+    action: { type: "visibility", enabled: true },
+  });
+  assert((await getLensData())[brand]);
+  current = await getLenses();
+  await updateLensGroup({
+    ...bulk,
+    revision: current.revision,
+    action: { type: "promotion", percent: null },
+  });
+  assert(
+    (await getLenses()).rows
+      .filter((r) => r.brand === brand)
+      .every((r) => r.promotionPriceCents === null),
+  );
+});
+
+test("lens batches reject invalid promotions, changed counts and partial price updates", async () => {
+  const current = await getLenses(),
+    [first, second] = current.rows;
+  await assert.rejects(
+    () =>
+      saveLensPrices({
+        revision: current.revision,
+        changes: [
+          { id: first.id, priceCents: 77777 },
+          { id: second.id, promotionPriceCents: second.priceCents },
+        ],
+      }),
+    /menor/,
+  );
+  let after = await getLenses();
+  assert.equal(after.revision, current.revision);
+  assert.equal(after.rows[0].priceCents, first.priceCents);
+  await assert.rejects(
+    () =>
+      updateLensGroup({
+        revision: current.revision,
+        expectedCount: 1,
+        filter: { brand: first.brand },
+        action: { type: "visibility", enabled: false },
+      }),
+    /resultados/,
+  );
+  await assert.rejects(
+    () =>
+      updateLensGroup({
+        revision: current.revision,
+        expectedCount: 1,
+        filter: { brand: "Marca inexistente" },
+        action: { type: "promotion", percent: 10 },
+      }),
+    /resultados/,
+  );
+  await assert.rejects(() =>
+    updateLensGroup({
+      revision: current.revision,
+      expectedCount: 1,
+      filter: {},
+      action: { type: "promotion", percent: 100 },
+    }),
+  );
+  after = await getLenses();
+  assert.equal(after.revision, current.revision);
+  assert.equal(after.rows[0].enabled, first.enabled);
 });
 
 test("exports neutralize spreadsheet formulas and preserve quoted customer names", () => {

@@ -1,6 +1,12 @@
 import Link from "next/link";
 import type { Product } from "@/lib/types";
-import { availability, minPrice, productHref } from "@/lib/product";
+import {
+  availability,
+  sellingPrice,
+  lowestPricedVariant,
+  isOnPromotion,
+  productHref,
+} from "@/lib/product";
 import { formatCurrency } from "@/lib/currency";
 import ProductImage from "./ProductImage";
 export default function ProductCard({
@@ -10,6 +16,8 @@ export default function ProductCard({
   product: Product;
   priority?: boolean;
 }) {
+  const variant = lowestPricedVariant(product);
+  const promotion = isOnPromotion(variant);
   return (
     <article className="store-product-card">
       <Link
@@ -28,7 +36,16 @@ export default function ProductCard({
         <h3>
           <Link href={productHref(product)}>{product.name}</Link>
         </h3>
-        <p className="store-price">{formatCurrency(minPrice(product) / 100)}</p>
+        {promotion && (
+          <span className="store-price-was">
+            <span className="sr-only">De </span>
+            <del>{formatCurrency(variant.priceCents / 100)}</del>
+          </span>
+        )}
+        <p className="store-price">
+          {promotion && <span className="sr-only">Por </span>}
+          {formatCurrency(sellingPrice(variant) / 100)}
+        </p>
         <p className="store-price-note">
           {product.priceConfirmed
             ? product.category === "grau"

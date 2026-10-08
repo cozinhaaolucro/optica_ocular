@@ -218,12 +218,14 @@ export default function AdminProductEditor({
               </div>
             ))}
             <div className="store-field">
-              <label htmlFor={`${v.id}-price`}>Preço (R$)</label>
+              <label htmlFor={`${v.id}-price`}>Preço normal (R$)</label>
               <input
                 id={`${v.id}-price`}
                 type="number"
                 min="0.01"
+                max="100000"
                 step="0.01"
+                required
                 value={v.priceCents / 100}
                 onChange={(e) =>
                   variant(i, {
@@ -231,6 +233,36 @@ export default function AdminProductEditor({
                   })
                 }
               />
+            </div>
+            <div className="store-field">
+              <label htmlFor={`${v.id}-promotion`}>
+                Preço promocional (R$)
+              </label>
+              <input
+                id={`${v.id}-promotion`}
+                type="number"
+                min="0.01"
+                max={(v.priceCents - 1) / 100}
+                step="0.01"
+                value={
+                  v.promotionPriceCents == null
+                    ? ""
+                    : v.promotionPriceCents / 100
+                }
+                placeholder="Sem promoção"
+                aria-describedby={`${v.id}-promotion-help`}
+                onChange={(e) =>
+                  variant(i, {
+                    promotionPriceCents:
+                      e.target.value === ""
+                        ? null
+                        : Math.round(Number(e.target.value) * 100),
+                  })
+                }
+              />
+              <small id={`${v.id}-promotion-help`} className="store-muted">
+                Menor que o normal. Deixe vazio para encerrar.
+              </small>
             </div>
             <div className="store-field">
               <label htmlFor={`${v.id}-stock`}>Estoque disponível</label>
@@ -292,6 +324,7 @@ export default function AdminProductEditor({
                 id: `${selected.id}-${Date.now()}`,
                 sku: "",
                 label: "Nova variante",
+                promotionPriceCents: null,
                 stock: 0,
               },
             ],

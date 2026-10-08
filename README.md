@@ -28,6 +28,8 @@ Configure as variáveis também no ambiente **Production** da Vercel e faça nov
 
 Visão geral, catálogo, preços e estoque, atendimentos, clientes, lentes, histórico e operação. Busca, filtros, paginação, exportação CSV, fotos, variantes, duplicação de modelos, exibição em lote e proteção contra edições simultâneas. As observações da equipe são privadas. Consulte o [guia da equipe](GUIA-PAINEL.md).
 
+Produtos têm preço normal e promocional por variante, com o mesmo valor aplicado no catálogo, carrinho e orçamento. Lentes permitem ativação e promoções por configuração ou por marca/linha inteira. As alterações preservam os cadastros e entram nas próximas simulações. Ofertas não têm expiração automática: a equipe encerra pelo painel.
+
 ## Verificação
 
 ```sh

@@ -1,4 +1,4 @@
-import type { Product } from "./types";
+import type { Product, Variant } from "./types";
 
 export const categories = [
   {
@@ -15,8 +15,20 @@ export const categories = [
   },
 ] as const;
 export const productHref = (p: Product) => `/produtos/${p.category}/${p.slug}`;
-export const minPrice = (p: Product) =>
-  Math.min(...p.variants.map((v) => v.priceCents));
+export function isOnPromotion(v: Variant) {
+  return (
+    Number.isInteger(v.promotionPriceCents) &&
+    (v.promotionPriceCents ?? 0) > 0 &&
+    v.promotionPriceCents! < v.priceCents
+  );
+}
+export const sellingPrice = (v: Variant) =>
+  isOnPromotion(v) ? v.promotionPriceCents! : v.priceCents;
+export const lowestPricedVariant = (p: Product) =>
+  p.variants.reduce((lowest, v) =>
+    sellingPrice(v) < sellingPrice(lowest) ? v : lowest,
+  );
+export const minPrice = (p: Product) => sellingPrice(lowestPricedVariant(p));
 export function canSell(p: Product) {
   return (
     p.published &&

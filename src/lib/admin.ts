@@ -54,6 +54,13 @@ export async function updateInventory(input: unknown) {
       revision: z.number().int().min(0),
       stock: z.number().int().min(0).max(100000),
       priceCents: z.number().int().min(1).max(10000000),
+      promotionPriceCents: z
+        .number()
+        .int()
+        .min(1)
+        .max(10000000)
+        .nullable()
+        .optional(),
       reason: z.string().trim().min(3).max(300),
     })
     .strict()
@@ -67,8 +74,11 @@ export async function updateInventory(input: unknown) {
     if (!variant) throw new Error("Variante não encontrada.");
     const previousStock = variant.stock;
     const previousPrice = variant.priceCents;
+    const previousPromotionPrice = variant.promotionPriceCents ?? null;
     variant.stock = data.stock;
     variant.priceCents = data.priceCents;
+    if (data.promotionPriceCents !== undefined)
+      variant.promotionPriceCents = data.promotionPriceCents;
     const saved = await saveProduct(product);
     await audit("inventory_updated", {
       productId: product.id,
@@ -78,6 +88,8 @@ export async function updateInventory(input: unknown) {
       stock: variant.stock,
       previousPrice,
       priceCents: variant.priceCents,
+      previousPromotionPrice,
+      promotionPriceCents: variant.promotionPriceCents ?? null,
       reason: data.reason,
     });
     return saved;

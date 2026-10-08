@@ -37,7 +37,7 @@ export const activityLabels: Record<string, string> = {
   catalog_visibility: "Exibição do catálogo alterada",
   order_created: "Nova solicitação",
   service_updated: "Atendimento atualizado",
-  lens_prices_updated: "Preços de lentes atualizados",
+  lens_prices_updated: "Tabela de lentes atualizada",
   fulfillment_updated: "Entrega atualizada",
   order_released: "Reserva liberada",
 };

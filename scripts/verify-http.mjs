@@ -448,6 +448,165 @@ try {
       assert.equal(Math.round(match.p * 100), row.priceCents + 123);
     },
   );
+  await check(
+    "promoção de produto aparece na loja e usa o mesmo valor no orçamento",
+    async () => {
+      const { products } = await (
+        await req("/api/admin/products", null, "GET", true)
+      ).json();
+      let product = products.find((row) => row.id === p.id);
+      const invalid = structuredClone(product);
+      invalid.variants[0].promotionPriceCents = invalid.variants[0].priceCents;
+      assert.equal(
+        (await req("/api/admin/products", invalid, "PUT", true)).status,
+        400,
+      );
+      product.variants[0].promotionPriceCents = 99900;
+      const saved = await req("/api/admin/products", product, "PUT", true);
+      assert.equal(saved.status, 200);
+      product = (await saved.json()).product;
+      const html = await (
+        await req(`/produtos/${product.category}/${product.slug}`)
+      ).text();
+      assert(html.includes("<del>"));
+      assert(html.includes("999,00"));
+      assert(
+        (await (await req(`/produtos/${product.category}`)).text()).includes(
+          "<del>",
+        ),
+      );
+      const quoted = await req(
+        "/api/orders",
+        { ...body, idempotencyKey: randomUUID() },
+        "POST",
+        true,
+      );
+      assert.equal(quoted.status, 201);
+      const quoteId = (await quoted.json()).order.id;
+      const quote = (await (await req(`/api/orders/${quoteId}`, null, "GET", true)).json()).order;
+      assert.equal(quote.items[0].priceCents, 99900);
+      assert.equal(quote.totalCents, 199800);
+      product.variants[0].promotionPriceCents = null;
+      assert.equal(
+        (await req("/api/admin/products", product, "PUT", true)).status,
+        200,
+      );
+      assert.equal(
+        (await (await req(`/api/orders/${quote.id}`, null, "GET", true)).json())
+          .order.totalCents,
+        199800,
+      );
+    },
+  );
+  await check(
+    "ativação e promoção de marcas de lentes são protegidas e chegam ao simulador",
+    async () => {
+      const before = await (
+        await req("/api/admin/lenses", null, "GET", true)
+      ).json();
+      const rows = before.rows.filter((r) => r.brand === "ZEISS");
+      assert(rows.length > 1000);
+      const bulk = {
+        revision: before.revision,
+        expectedCount: rows.length,
+        filter: { brand: "ZEISS" },
+        action: { type: "promotion", percent: 10 },
+      };
+      assert.equal((await req("/api/admin/lenses", bulk, "POST")).status, 401);
+      assert.equal(
+        (
+          await req(
+            "/api/admin/lenses",
+            bulk,
+            "POST",
+            true,
+            "https://foreign.example",
+          )
+        ).status,
+        400,
+      );
+      assert.equal(
+        (await req("/api/admin/lenses", bulk, "POST", true)).status,
+        200,
+      );
+      assert.equal(
+        (await req("/api/admin/lenses", bulk, "POST", true)).status,
+        400,
+      );
+      let current = await (
+        await req("/api/admin/lenses", null, "GET", true)
+      ).json();
+      assert(
+        current.rows
+          .filter((r) => r.brand === "ZEISS")
+          .every(
+            (r) => r.promotionPriceCents === Math.round(r.priceCents * 0.9),
+          ),
+      );
+      let publicData = await (await req("/api/lenses")).json();
+      const row = rows[0];
+      const config =
+        publicData[row.brand][row.category][row.line][row.option][0];
+      assert.equal(config.regularPrice, row.priceCents / 100);
+      assert.equal(config.p, Math.round(row.priceCents * 0.9) / 100);
+      assert.equal(
+        (
+          await req(
+            "/api/admin/lenses",
+            {
+              ...bulk,
+              revision: current.revision,
+              action: { type: "visibility", enabled: false },
+            },
+            "POST",
+            true,
+          )
+        ).status,
+        200,
+      );
+      publicData = await (await req("/api/lenses")).json();
+      assert.equal(publicData.ZEISS, undefined);
+      assert(publicData.HOYA);
+      current = await (
+        await req("/api/admin/lenses", null, "GET", true)
+      ).json();
+      assert.equal(current.rows.length, before.rows.length);
+      assert.equal(
+        (
+          await req(
+            "/api/admin/lenses",
+            {
+              ...bulk,
+              revision: current.revision,
+              action: { type: "visibility", enabled: true },
+            },
+            "POST",
+            true,
+          )
+        ).status,
+        200,
+      );
+      current = await (
+        await req("/api/admin/lenses", null, "GET", true)
+      ).json();
+      assert.equal(
+        (
+          await req(
+            "/api/admin/lenses",
+            {
+              ...bulk,
+              revision: current.revision,
+              action: { type: "promotion", percent: null },
+            },
+            "POST",
+            true,
+          )
+        ).status,
+        200,
+      );
+      assert((await (await req("/api/lenses")).json()).ZEISS);
+    },
+  );
   await check("saída invalida a sessão", async () => {
     assert.equal(
       (await req("/api/admin/session", null, "DELETE", true)).status,

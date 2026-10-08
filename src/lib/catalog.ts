@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { query, execute, audit, transaction } from "./persistence";
-import { canSell } from "./product";
+import { canSell, sellingPrice } from "./product";
 import { referenceProducts } from "./catalog-seed";
 import { isCatalogPreview } from "./storage-mode";
 import type { Product, CartLine, CartItem } from "./types";
@@ -46,17 +46,34 @@ export const productSchema = z
     published: z.boolean(),
     variants: z
       .array(
-        z.object({
-          id: z.string().regex(/^[a-zA-Z0-9-]{3,120}$/),
-          sku: z.string().trim().max(80),
-          label: z.string().trim().min(1).max(120),
-          color: z.string().trim().max(80),
-          lensWidth: dimension,
-          bridge: dimension,
-          temple: dimension,
-          priceCents: z.number().int().min(1).max(10000000),
-          stock: z.number().int().min(0).max(100000),
-        }),
+        z
+          .object({
+            id: z.string().regex(/^[a-zA-Z0-9-]{3,120}$/),
+            sku: z.string().trim().max(80),
+            label: z.string().trim().min(1).max(120),
+            color: z.string().trim().max(80),
+            lensWidth: dimension,
+            bridge: dimension,
+            temple: dimension,
+            priceCents: z.number().int().min(1).max(10000000),
+            promotionPriceCents: z
+              .number()
+              .int()
+              .min(1)
+              .max(10000000)
+              .nullable()
+              .optional(),
+            stock: z.number().int().min(0).max(100000),
+          })
+          .refine(
+            (v) =>
+              v.promotionPriceCents == null ||
+              v.promotionPriceCents < v.priceCents,
+            {
+              path: ["promotionPriceCents"],
+              message: "O preço promocional deve ser menor que o preço normal.",
+            },
+          ),
       )
       .min(1)
       .max(40),
@@ -171,7 +188,7 @@ export async function resolveLines(
       slug: p.slug,
       category: p.category,
       variantLabel: v.label,
-      priceCents: v.priceCents,
+      priceCents: sellingPrice(v),
       image: p.images[0] || "",
       available: canSell(p) && v.stock >= line.quantity,
     });

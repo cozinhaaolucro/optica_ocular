@@ -4,9 +4,15 @@ import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import type { Product, Variant, Order } from "@/lib/types";
 import type { dashboard } from "@/lib/admin";
-import type { LensRow } from "@/lib/lenses";
+import type { LensRow, LensEdit } from "@/lib/lens-management";
 import { formatCurrency } from "@/lib/currency";
-import { canSell, minPrice, productHref } from "@/lib/product";
+import {
+  canSell,
+  minPrice,
+  isOnPromotion,
+  sellingPrice,
+  productHref,
+} from "@/lib/product";
 import {
   activityLabels,
   csv,
@@ -15,6 +21,7 @@ import {
   serviceLabels,
 } from "@/lib/admin-utils";
 import AdminProductEditor from "./AdminProductEditor";
+import AdminLenses from "./AdminLenses";
 import ProductImage from "./ProductImage";
 
 type Dashboard = Awaited<ReturnType<typeof dashboard>>;
@@ -86,6 +93,7 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
       temple: "haste",
       stock: "estoque (número inteiro)",
       priceCents: "preço (R$ 0,01 a R$ 100.000,00)",
+      promotionPriceCents: "preço promocional (menor que o preço normal)",
       reason: "motivo (3 a 300 caracteres)",
       note: "observações (até 4.000 caracteres)",
     };
@@ -180,6 +188,7 @@ export default function AdminPanel() {
     product: Product;
     variant: Variant;
     price: string;
+    promotion: string;
     stock: string;
     reason: string;
   } | null>(null);
@@ -187,7 +196,7 @@ export default function AdminPanel() {
       revision: number;
       rows: LensRow[];
     } | null>(null),
-    [lensEdits, setLensEdits] = useState<Record<string, string>>({});
+    [lensEdits, setLensEdits] = useState<Record<string, LensEdit>>({});
   const [message, setMessage] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -211,6 +220,7 @@ export default function AdminPanel() {
       setSelectedOrder(null);
       setInventory(null);
       setLensEdits({});
+      setLensData(null);
     }
   }, []);
   const refresh = useCallback(async () => {
@@ -327,6 +337,7 @@ export default function AdminPanel() {
             id: `${id}-${i}`,
             sku: "",
             stock: 0,
+            promotionPriceCents: null,
           })),
         }
       : {
@@ -502,9 +513,11 @@ export default function AdminPanel() {
           ? p.category === filter
           : filter === "draft"
             ? !p.published
-            : filter === "pending"
-              ? productIssues(p).length > 0
-              : canSell(p))),
+            : filter === "promotion"
+              ? p.variants.some(isOnPromotion)
+              : filter === "pending"
+                ? productIssues(p).length > 0
+                : canSell(p))),
   );
   const filteredOrders = orders.filter(
     (o) =>
@@ -519,15 +532,12 @@ export default function AdminPanel() {
       ({ p, v }) =>
         matched(`${p.name} ${p.brand} ${v.sku} ${v.color}`) &&
         (filter === "all" ||
-          (filter === "zero" ? v.stock === 0 : v.stock > 0 && v.stock <= 3)),
+          (filter === "promotion"
+            ? isOnPromotion(v)
+            : filter === "zero"
+              ? v.stock === 0
+              : v.stock > 0 && v.stock <= 3)),
     );
-  const lensRows = (lensData?.rows || []).filter(
-    (r) =>
-      (!brandFilter || r.brand === brandFilter) &&
-      matched(
-        `${r.brand} ${r.category} ${r.line} ${r.option} ${r.material} ${r.index} ${r.treatment}`,
-      ),
-  );
   const customers = Array.from(
     orders
       .reduce((map, o) => {
@@ -893,6 +903,7 @@ export default function AdminPanel() {
                     ["ready", "Validados"],
                     ["pending", "A conferir"],
                     ["draft", "Ocultos"],
+                    ["promotion", "Em promoção"],
                   ].map(([id, label]) => (
                     <option key={id} value={id}>
                       {label}
@@ -957,6 +968,7 @@ export default function AdminPanel() {
                           "SKU",
                           "Variante",
                           "Preço (R$)",
+                          "Promocional (R$)",
                           "Estoque",
                           "Publicado",
                         ],
@@ -968,6 +980,9 @@ export default function AdminPanel() {
                             v.sku,
                             v.label,
                             decimal(v.priceCents),
+                            v.promotionPriceCents == null
+                              ? ""
+                              : decimal(v.promotionPriceCents),
                             v.stock,
                             p.published ? "Sim" : "Não",
                           ]),
@@ -1051,7 +1066,12 @@ export default function AdminPanel() {
                             </span>
                           </button>
                         </td>
-                        <td className="admin-numeric">{money(minPrice(p))}</td>
+                        <td className="admin-numeric">
+                          {money(minPrice(p))}
+                          {p.variants.some(isOnPromotion) && (
+                            <small>Em promoção</small>
+                          )}
+                        </td>
                         <td className="admin-numeric">
                           {p.variants.reduce((n, v) => n + v.stock, 0)}
                         </td>
@@ -1104,17 +1124,28 @@ export default function AdminPanel() {
                 <option value="all">Todos os saldos</option>
                 <option value="low">Estoque baixo · 1 a 3</option>
                 <option value="zero">Sem estoque</option>
+                <option value="promotion">Em promoção</option>
               </select>
               <button
                 type="button"
                 onClick={() =>
                   download("estoque-ocular.csv", [
-                    ["Modelo", "SKU", "Cor", "Preço (R$)", "Estoque"],
+                    [
+                      "Modelo",
+                      "SKU",
+                      "Cor",
+                      "Preço normal (R$)",
+                      "Promocional (R$)",
+                      "Estoque",
+                    ],
                     ...stockRows.map(({ p, v }) => [
                       p.name,
                       v.sku,
                       v.color,
                       decimal(v.priceCents),
+                      v.promotionPriceCents == null
+                        ? ""
+                        : decimal(v.promotionPriceCents),
                       v.stock,
                     ]),
                   ])
@@ -1137,6 +1168,9 @@ export default function AdminPanel() {
                         revision: inventory.product.revision,
                         stock: Number(inventory.stock),
                         priceCents: cents(inventory.price),
+                        promotionPriceCents: inventory.promotion.trim()
+                          ? cents(inventory.promotion)
+                          : null,
                         reason: inventory.reason,
                       }),
                     );
@@ -1150,7 +1184,7 @@ export default function AdminPanel() {
                 <p>{inventory.variant.label}</p>
                 <div className="admin-fields">
                   <div className="store-field">
-                    <label htmlFor="stock-price">Preço (R$)</label>
+                    <label htmlFor="stock-price">Preço normal (R$)</label>
                     <input
                       id="stock-price"
                       inputMode="decimal"
@@ -1161,6 +1195,28 @@ export default function AdminPanel() {
                         setInventory({ ...inventory, price: e.target.value })
                       }
                     />
+                  </div>
+                  <div className="store-field">
+                    <label htmlFor="stock-promotion">
+                      Preço promocional (R$)
+                    </label>
+                    <input
+                      id="stock-promotion"
+                      inputMode="decimal"
+                      pattern="[0-9]+([,.][0-9]{1,2})?"
+                      placeholder="Sem promoção"
+                      aria-describedby="stock-promotion-help"
+                      value={inventory.promotion}
+                      onChange={(e) =>
+                        setInventory({
+                          ...inventory,
+                          promotion: e.target.value,
+                        })
+                      }
+                    />
+                    <small id="stock-promotion-help" className="store-muted">
+                      Menor que o normal. Deixe vazio para encerrar.
+                    </small>
                   </div>
                   <div className="store-field">
                     <label htmlFor="stock-count">Estoque disponível</label>
@@ -1227,7 +1283,14 @@ export default function AdminPanel() {
                         </small>
                       </td>
                       <td>{v.sku || "—"}</td>
-                      <td className="admin-numeric">{money(v.priceCents)}</td>
+                      <td className="admin-numeric">
+                        {isOnPromotion(v) && (
+                          <small>
+                            <del>{money(v.priceCents)}</del>
+                          </small>
+                        )}
+                        {money(sellingPrice(v))}
+                      </td>
                       <td>
                         <span
                           className={`admin-pill ${v.stock > 3 ? "is-green" : ""}`}
@@ -1245,6 +1308,10 @@ export default function AdminPanel() {
                                 product: p,
                                 variant: v,
                                 price: decimal(v.priceCents),
+                                promotion:
+                                  v.promotionPriceCents == null
+                                    ? ""
+                                    : decimal(v.promotionPriceCents),
                                 stock: String(v.stock),
                                 reason: "",
                               });
@@ -1574,215 +1641,75 @@ export default function AdminPanel() {
           </>
         )}
         {tab === "lenses" && (
-          <>
-            <p className="admin-page-description">
-              Os valores salvos aqui são usados pelo simulador da loja.
-            </p>
-            <div className="admin-filter-bar">
-              {search}
-              <select
-                aria-label="Filtrar marca da lente"
-                value={brandFilter}
-                onChange={(e) => {
-                  setBrandFilter(e.target.value);
-                  setPage(1);
-                }}
-              >
-                <option value="">Todas as marcas</option>
-                {Array.from(new Set(lensData?.rows.map((r) => r.brand)))
-                  .sort()
-                  .map((b) => (
-                    <option key={b}>{b}</option>
-                  ))}
-              </select>
-              <button
-                type="button"
-                onClick={() =>
-                  download("lentes-ocular.csv", [
-                    [
-                      "Marca",
-                      "Categoria",
-                      "Linha",
-                      "Tecnologia",
-                      "Material",
-                      "Índice",
-                      "Tratamento",
-                      "Valor (R$)",
-                    ],
-                    ...lensRows.map((r) => [
-                      r.brand,
-                      r.category,
-                      r.line,
-                      r.option,
-                      r.material,
-                      r.index,
-                      r.treatment,
-                      decimal(r.priceCents),
-                    ]),
-                  ])
-                }
-              >
-                Exportar CSV
-              </button>
-            </div>
-            <form
-              className="admin-lens-adjust"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const percent = Number(
-                  new FormData(e.currentTarget).get("percent"),
-                );
-                if (lensRows.length > 1000) {
-                  setError(
-                    "Filtre a marca ou a linha para reajustar até 1.000 configurações por vez.",
-                  );
-                  return;
-                }
+          <AdminLenses
+            data={lensData}
+            edits={lensEdits}
+            onEdits={setLensEdits}
+            busy={busy}
+            onSave={() =>
+              work(async () => {
+                const changes = Object.entries(lensEdits).map(([id, edit]) => ({
+                  id,
+                  ...(edit.price !== undefined
+                    ? { priceCents: cents(edit.price) }
+                    : {}),
+                  ...(edit.promotion !== undefined
+                    ? {
+                        promotionPriceCents: edit.promotion.trim()
+                          ? cents(edit.promotion)
+                          : null,
+                      }
+                    : {}),
+                  ...(edit.enabled !== undefined
+                    ? { enabled: edit.enabled }
+                    : {}),
+                }));
                 if (
-                  lensRows.some(
-                    (r) =>
-                      lensEdits[r.id] !== undefined &&
-                      !Number.isFinite(cents(lensEdits[r.id])),
-                  )
-                ) {
-                  setError(
-                    "Corrija os valores em edição antes de aplicar o reajuste.",
-                  );
-                  return;
-                }
-                if (
-                  !window.confirm(
-                    `Preparar reajuste de ${percent}% em ${lensRows.length} configurações filtradas?`,
+                  changes.some(
+                    (c) =>
+                      (c.priceCents !== undefined &&
+                        (!Number.isFinite(c.priceCents) ||
+                          c.priceCents <= 0)) ||
+                      (c.promotionPriceCents != null &&
+                        (!Number.isFinite(c.promotionPriceCents) ||
+                          c.promotionPriceCents <= 0)),
                   )
                 )
-                  return;
-                const next = { ...lensEdits };
-                for (const r of lensRows)
-                  next[r.id] = decimal(
-                    Math.max(
-                      1,
-                      Math.round(
-                        (lensEdits[r.id]
-                          ? cents(lensEdits[r.id])
-                          : r.priceCents) *
-                          (1 + percent / 100),
-                      ),
-                    ),
+                  throw new Error(
+                    "Confira os preços alterados. Use valores como 349,90.",
                   );
-                setLensEdits(next);
-              }}
-            >
-              <label htmlFor="lens-percent">
-                Reajustar resultados filtrados
-              </label>
-              <input
-                id="lens-percent"
-                name="percent"
-                type="number"
-                min="-99"
-                max="200"
-                step="0.1"
-                required
-                placeholder="%"
-                disabled={busy}
-              />
-              <button disabled={busy || !lensRows.length}>
-                Aplicar percentual
-              </button>
-            </form>
-            <div className="admin-table-wrap">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Linha</th>
-                    <th>Configuração</th>
-                    <th>Tratamento</th>
-                    <th>Valor (R$)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {view(lensRows).map((r) => (
-                    <tr key={r.id}>
-                      <td>
-                        <strong>{r.line}</strong>
-                        <small>
-                          {r.brand} · {r.category}
-                        </small>
-                      </td>
-                      <td>
-                        {r.option}
-                        <small>
-                          {r.material} {r.index}
-                        </small>
-                      </td>
-                      <td>{r.treatment}</td>
-                      <td>
-                        <input
-                          className="admin-lens-price"
-                          aria-label={`Preço de ${r.line}, ${r.option}, ${r.treatment}, ${r.material} ${r.index}`}
-                          inputMode="decimal"
-                          disabled={busy}
-                          value={lensEdits[r.id] ?? decimal(r.priceCents)}
-                          onChange={(e) => {
-                            const next = { ...lensEdits };
-                            if (cents(e.target.value) === r.priceCents)
-                              delete next[r.id];
-                            else next[r.id] = e.target.value;
-                            setLensEdits(next);
-                          }}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {!lensRows.length && (
-                <Empty>
-                  {busy
-                    ? "Carregando a tabela…"
-                    : "Nenhuma configuração encontrada."}
-                </Empty>
-              )}
-            </div>
-            <Pager page={page} total={lensRows.length} onPage={setPage} />
-            <div className="admin-lens-save">
-              <span>{Object.keys(lensEdits).length} valores alterados</span>
-              <button
-                type="button"
-                className="button"
-                disabled={busy || !Object.keys(lensEdits).length}
-                onClick={() =>
-                  void work(async () => {
-                    const changes = Object.entries(lensEdits).map(
-                      ([id, value]) => ({ id, priceCents: cents(value) }),
-                    );
-                    if (
-                      changes.some(
-                        (c) =>
-                          !Number.isFinite(c.priceCents) || c.priceCents <= 0,
-                      )
-                    )
-                      throw new Error(
-                        "Confira os preços alterados. Use valores como 349,90.",
-                      );
-                    await api(
-                      "/api/admin/lenses",
-                      json("PATCH", {
-                        revision: lensData?.revision || 0,
-                        changes,
-                      }),
-                    );
-                    setLensData(await api("/api/admin/lenses"));
-                    setLensEdits({});
-                    await refresh();
-                    setMessage("Tabela de lentes atualizada no simulador.");
-                  })
-                }
-              >
-                {busy ? "Salvando…" : "Salvar preços"}
-              </button>
-            </div>
-          </>
+                const body = { revision: lensData?.revision || 0, changes };
+                if (JSON.stringify(body).length > 60000)
+                  throw new Error(
+                    "Salve menos configurações de uma vez. Use as ações em lote para marcas e linhas inteiras.",
+                  );
+                await api("/api/admin/lenses", json("PATCH", body));
+                setLensEdits({});
+                setLensData(await api("/api/admin/lenses"));
+                await refresh();
+                setMessage("Configurações de lentes atualizadas no simulador.");
+              })
+            }
+            onBulk={(filter, action, expectedCount) =>
+              work(async () => {
+                await api(
+                  "/api/admin/lenses",
+                  json("POST", {
+                    revision: lensData?.revision || 0,
+                    filter,
+                    action,
+                    expectedCount,
+                  }),
+                );
+                setLensData(await api("/api/admin/lenses"));
+                await refresh();
+                setMessage(
+                  expectedCount +
+                    " configurações de lentes atualizadas no simulador.",
+                );
+              })
+            }
+          />
         )}
         {tab === "activity" && (
           <>

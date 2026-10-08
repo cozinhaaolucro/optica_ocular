@@ -8,6 +8,7 @@ interface LensConfig {
   i?: string;
   t: string;
   p: number;
+  regularPrice?: number;
   e?: string;
 }
 type LensData = Record<
@@ -94,11 +95,9 @@ export default function LensSimulator({
     setLoading(true);
     setError("");
     try {
-      if (!data) {
-        const r = await fetch("/api/lenses", { cache: "no-store" });
-        if (!r.ok) throw new Error();
-        setData(await r.json());
-      }
+      const r = await fetch("/api/lenses", { cache: "no-store" });
+      if (!r.ok) throw new Error();
+      setData(await r.json());
       go(1);
     } catch {
       setError("Não foi possível carregar as opções. Tente novamente.");
@@ -112,17 +111,19 @@ export default function LensSimulator({
       ? Object.entries(data[brand] || {})
           .filter(([cat]) => matches(cat))
           .flatMap(([cat, ps]) =>
-            Object.entries(ps).map(([name, options]) => ({
-              cat,
-              name,
-              options,
-              min: Math.min(
-                ...Object.values(options)
-                  .flat()
-                  .filter((c) => Number.isFinite(c.p) && c.p > 0)
-                  .map((c) => c.p),
-              ),
-            })),
+            Object.entries(ps).map(([name, options]) => {
+              const lowest = Object.values(options)
+                .flat()
+                .filter((c) => Number.isFinite(c.p) && c.p > 0)
+                .sort((a, b) => a.p - b.p)[0];
+              return {
+                cat,
+                name,
+                options,
+                min: lowest?.p ?? Infinity,
+                regularPrice: lowest?.regularPrice,
+              };
+            }),
           )
           .filter((p) => Number.isFinite(p.min))
           .sort((a, b) => a.min - b.min)
@@ -224,19 +225,32 @@ export default function LensSimulator({
           )}
           {step === 1 && (
             <div className="store-lens-options">
-              {groups.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  onClick={() => {
-                    setGroupId(g.id);
-                    go(2);
-                  }}
-                >
-                  <strong>{g.title}</strong>
-                  <span>{g.description}</span>
-                </button>
-              ))}
+              {groups
+                .filter(
+                  (g) =>
+                    data &&
+                    Object.values(data).some((categories) =>
+                      Object.keys(categories).some((cat) =>
+                        g.match.some((m) => cat.includes(m)),
+                      ),
+                    ),
+                )
+                .map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => {
+                      setGroupId(g.id);
+                      go(2);
+                    }}
+                  >
+                    <strong>{g.title}</strong>
+                    <span>{g.description}</span>
+                  </button>
+                ))}
+              {data && !Object.keys(data).length && (
+                <p>Converse com a equipe para escolher suas lentes.</p>
+              )}
             </div>
           )}
           {step === 2 && (
@@ -303,7 +317,16 @@ export default function LensSimulator({
                       </span>
                       <span>
                         <small>A partir de</small>
+                        {p.regularPrice !== undefined && (
+                          <span className="store-price-was">
+                            <span className="sr-only">De </span>
+                            <del>{formatCurrency(p.regularPrice)}</del>
+                          </span>
+                        )}
                         <strong className="store-price">
+                          {p.regularPrice !== undefined && (
+                            <span className="sr-only">Por </span>
+                          )}
                           {formatCurrency(p.min)}
                         </strong>
                       </span>
@@ -402,7 +425,18 @@ export default function LensSimulator({
                       {c.e && <small>Faixa informada: {c.e}</small>}
                     </div>
                     <div>
-                      <p className="store-price">{formatCurrency(c.p)}</p>
+                      {c.regularPrice !== undefined && (
+                        <span className="store-price-was">
+                          <span className="sr-only">De </span>
+                          <del>{formatCurrency(c.regularPrice)}</del>
+                        </span>
+                      )}
+                      <p className="store-price">
+                        {c.regularPrice !== undefined && (
+                          <span className="sr-only">Por </span>
+                        )}
+                        {formatCurrency(c.p)}
+                      </p>
                       <span className="store-muted">o par</span>
                     </div>
                     <a

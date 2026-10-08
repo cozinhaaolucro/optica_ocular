@@ -2,7 +2,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Product } from "@/lib/types";
-import { availability, whatsapp } from "@/lib/product";
+import {
+  availability,
+  sellingPrice,
+  isOnPromotion,
+  whatsapp,
+} from "@/lib/product";
 import { formatCurrency } from "@/lib/currency";
 import { track } from "@/lib/analytics";
 import ProductImage from "./ProductImage";
@@ -66,8 +71,15 @@ export default function ProductDetails({ product }: { product: Product }) {
         </p>
         <h1>{product.name}</h1>
         <div>
+          {isOnPromotion(variant) && (
+            <span className="store-price-was">
+              <span className="sr-only">De </span>
+              <del>{formatCurrency(variant.priceCents / 100)}</del>
+            </span>
+          )}
           <p className="store-price detail-price">
-            {formatCurrency(variant.priceCents / 100)}
+            {isOnPromotion(variant) && <span className="sr-only">Por </span>}
+            {formatCurrency(sellingPrice(variant) / 100)}
           </p>
           <p className="store-price-note">
             {product.priceConfirmed
