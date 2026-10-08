@@ -77,6 +77,8 @@ export interface Address {
   state: string;
 }
 export interface Order {
+  revision?: number;
+  serviceStatus?: "new" | "contacted" | "quoted" | "completed" | "cancelled";
   id: string;
   number: string;
   token: string;

@@ -4,10 +4,14 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { randomUUID } from "node:crypto";
-
 const folder = mkdtempSync(join(tmpdir(), "ocular-test-"));
 process.env.OCULAR_DB_PATH = join(folder, "test.sqlite");
-const { db, rateLimit } = await import("../src/lib/db");
+delete process.env.DATABASE_URL;
+delete process.env.POSTGRES_URL;
+delete process.env.VERCEL;
+delete process.env.OCULAR_CATALOG_PREVIEW;
+const { db } = await import("../src/lib/db");
+const { rateLimit } = await import("../src/lib/persistence");
 const { getProducts, getProduct, saveProduct, resolveLines } =
   await import("../src/lib/catalog");
 const {
@@ -21,6 +25,56 @@ const {
 const { canSell } = await import("../src/lib/product");
 const { checkPassword, hashToken } = await import("../src/lib/auth");
 const { readJson, sameOrigin } = await import("../src/lib/http");
+const { updateInventory, setPublished } = await import("../src/lib/admin");
+const { updateService } = await import("../src/lib/orders");
+const { getLenses, getLensData, saveLensPrices } =
+  await import("../src/lib/lenses");
+const { csv } = await import("../src/lib/admin-utils");
+
+test("acesso local aceita a própria origem sem liberar origens externas na Vercel", () => {
+  const previousUrl = process.env.OCULAR_SITE_URL;
+  const previousVercel = process.env.VERCEL;
+  try {
+    process.env.OCULAR_SITE_URL = "https://optica-ocular.vercel.app";
+    sameOrigin(
+      new Request("http://localhost:4012/api/admin/session", {
+        headers: { origin: "http://localhost:4012" },
+      }),
+    );
+    assert.throws(() =>
+      sameOrigin(
+        new Request("http://localhost:4012/api/admin/session", {
+          headers: { origin: "https://foreign.example" },
+        }),
+      ),
+    );
+    process.env.VERCEL = "1";
+    assert.throws(() =>
+      sameOrigin(
+        new Request("http://localhost:4012/api/admin/session", {
+          headers: { origin: "http://localhost:4012" },
+        }),
+      ),
+    );
+    sameOrigin(
+      new Request("https://optica-ocular.vercel.app/api/admin/session", {
+        headers: { origin: "https://optica-ocular.vercel.app" },
+      }),
+    );
+    assert.throws(() =>
+      sameOrigin(
+        new Request("https://optica-ocular.vercel.app/api/admin/session", {
+          headers: { origin: "https://foreign.example" },
+        }),
+      ),
+    );
+  } finally {
+    if (previousUrl === undefined) delete process.env.OCULAR_SITE_URL;
+    else process.env.OCULAR_SITE_URL = previousUrl;
+    if (previousVercel === undefined) delete process.env.VERCEL;
+    else process.env.VERCEL = previousVercel;
+  }
+});
 after(() => {
   db().close();
   if (
@@ -29,8 +83,8 @@ after(() => {
   )
     rmSync(folder, { recursive: true });
 });
-function fixture(stock = 3) {
-  const p = structuredClone(getProducts()[0]);
+async function fixture(stock = 3) {
+  const p = structuredClone((await getProducts())[0]);
   p.id = `test-${randomUUID()}`;
   p.slug = p.id;
   p.revision = 0;
@@ -56,12 +110,12 @@ function fixture(stock = 3) {
       stock,
     },
   ];
-  return saveProduct(p);
+  return await saveProduct(p);
 }
-const lines = (p: ReturnType<typeof fixture>, quantity = 1) => [
+const lines = (p: Awaited<ReturnType<typeof fixture>>, quantity = 1) => [
   { productId: p.id, variantId: p.variants[0].id, quantity },
 ];
-const input = (p: ReturnType<typeof fixture>, quantity = 1) => ({
+const input = (p: Awaited<ReturnType<typeof fixture>>, quantity = 1) => ({
   items: lines(p, quantity),
   customer: {
     name: "Pessoa de Teste",
@@ -71,9 +125,8 @@ const input = (p: ReturnType<typeof fixture>, quantity = 1) => ({
   privacyAccepted: true,
   idempotencyKey: randomUUID(),
 });
-
-test("seed is honest: placeholders, no confirmed stock or price", () => {
-  const ps = getProducts();
+test("seed is honest: placeholders, no confirmed stock or price", async () => {
+  const ps = await getProducts();
   assert.equal(ps.length, 33);
   assert(
     ps.every(
@@ -86,33 +139,40 @@ test("seed is honest: placeholders, no confirmed stock or price", () => {
     ),
   );
 });
-test("server prices prevail; extra totals, fractional quantities and duplicates are rejected", () => {
-  const p = fixture();
-  assert.equal(resolveLines(lines(p, 2))[0].priceCents, 34990);
-  assert.throws(() => resolveLines([{ ...lines(p)[0], priceCents: 1 }]));
-  assert.throws(() => resolveLines(lines(p, 1.5)));
-  assert.throws(() => resolveLines(lines(p, 11)));
-  assert.throws(() => resolveLines([...lines(p), ...lines(p)]));
+test("server prices prevail; extra totals, fractional quantities and duplicates are rejected", async () => {
+  const p = await fixture();
+  assert.equal((await resolveLines(lines(p, 2)))[0].priceCents, 34990);
+  await assert.rejects(
+    async () => await resolveLines([{ ...lines(p)[0], priceCents: 1 }]),
+  );
+  await assert.rejects(async () => await resolveLines(lines(p, 1.5)));
+  await assert.rejects(async () => await resolveLines(lines(p, 11)));
+  await assert.rejects(
+    async () => await resolveLines([...lines(p), ...lines(p)]),
+  );
 });
-test("unvalidated product cannot become a sale; quotation preserves inventory", () => {
-  const p = getProducts().find((p) => !p.verified)!;
+test("unvalidated product cannot become a sale; quotation preserves inventory", async () => {
+  const p = (await getProducts()).find((p) => !p.verified)!;
   const a = input(p);
-  assert.throws(() => createOrder(a, true), /disponibilidade/);
-  const result = createOrder(a);
+  await assert.rejects(
+    async () => await createOrder(a, true),
+    /disponibilidade/,
+  );
+  const result = await createOrder(a);
   assert.equal(result.order.status, "quote_requested");
   assert.equal(result.order.reserved, false);
-  assert.equal(getProduct(p.id)!.variants[0].stock, 0);
+  assert.equal((await getProduct(p.id))!.variants[0].stock, 0);
   assert.equal(result.order.token, hashToken(result.accessToken!));
   assert.equal("token" in publicOrder(result.order), false);
 });
-test("idempotent retry creates exactly one order and notification, including after price change", () => {
-  const p = fixture(),
+test("idempotent retry creates exactly one order and notification, including after price change", async () => {
+  const p = await fixture(),
     a = input(p);
-  const first = createOrder(a);
-  const updated = getProduct(p.id)!;
+  const first = await createOrder(a);
+  const updated = (await getProduct(p.id))!;
   updated.variants[0].priceCents = 59990;
-  saveProduct(updated);
-  const retry = createOrder(a);
+  await saveProduct(updated);
+  const retry = await createOrder(a);
   assert.equal(retry.order.id, first.order.id);
   assert.equal(retry.order.totalCents, 34990);
   assert.equal(
@@ -121,26 +181,33 @@ test("idempotent retry creates exactly one order and notification, including aft
       .get(first.order.id)!.n,
     1,
   );
-  assert.throws(
-    () => createOrder({ ...a, items: lines(p, 2) }),
+  await assert.rejects(
+    async () => await createOrder({ ...a, items: lines(p, 2) }),
     /carrinho mudou/,
   );
 });
-test("stock reservation is atomic, does not oversell and rejects stale admin writes", () => {
-  const p = fixture(2);
-  createOrder(input(p, 2), true);
-  assert.equal(getProduct(p.id)!.variants[0].stock, 0);
-  assert.throws(() => createOrder(input(p), true), /disponibilidade/);
-  assert.throws(() => saveProduct(p), /mudou/);
-});
-test("multi-item reservation failure rolls back without touching other inventory", () => {
-  const available = fixture(2),
-    empty = fixture(0);
-  const a = input(available);
-  assert.throws(() =>
-    createOrder({ ...a, items: [...lines(available), ...lines(empty)] }, true),
+test("stock reservation is atomic, does not oversell and rejects stale admin writes", async () => {
+  const p = await fixture(2);
+  await createOrder(input(p, 2), true);
+  assert.equal((await getProduct(p.id))!.variants[0].stock, 0);
+  await assert.rejects(
+    async () => await createOrder(input(p), true),
+    /disponibilidade/,
   );
-  assert.equal(getProduct(available.id)!.variants[0].stock, 2);
+  await assert.rejects(async () => await saveProduct(p), /mudou/);
+});
+test("multi-item reservation failure rolls back without touching other inventory", async () => {
+  const available = await fixture(2),
+    empty = await fixture(0);
+  const a = input(available);
+  await assert.rejects(
+    async () =>
+      await createOrder(
+        { ...a, items: [...lines(available), ...lines(empty)] },
+        true,
+      ),
+  );
+  assert.equal((await getProduct(available.id))!.variants[0].stock, 2);
   assert.equal(
     db()
       .prepare("SELECT COUNT(*) AS n FROM orders WHERE idem=?")
@@ -148,22 +215,22 @@ test("multi-item reservation failure rolls back without touching other inventory
     0,
   );
 });
-test("cancel/failure returns stock once; late payment requires review and cannot fulfill", () => {
-  const p = fixture(1),
-    { order } = createOrder(input(p), true);
-  releaseOrder(order.id, "cancelled");
-  releaseOrder(order.id, "cancelled");
-  assert.equal(getProduct(p.id)!.variants[0].stock, 1);
-  const reconciled = reconcilePayment(order.id, {
+test("cancel/failure returns stock once; late payment requires review and cannot fulfill", async () => {
+  const p = await fixture(1),
+    { order } = await createOrder(input(p), true);
+  await releaseOrder(order.id, "cancelled");
+  await releaseOrder(order.id, "cancelled");
+  assert.equal((await getProduct(p.id))!.variants[0].stock, 1);
+  const reconciled = await reconcilePayment(order.id, {
     id: "late",
     status: "paid",
     amountCents: order.totalCents,
     currency: "BRL",
   });
   assert.equal(reconciled.status, "review_required");
-  assert.throws(
-    () =>
-      updateFulfillment(order.id, {
+  await assert.rejects(
+    async () =>
+      await updateFulfillment(order.id, {
         fulfillment: "collected",
         tracking: "",
         note: "",
@@ -171,71 +238,80 @@ test("cancel/failure returns stock once; late payment requires review and cannot
     /pagamento/,
   );
 });
-test("verified payment handles duplicates, late pending and refund without duplicating inventory", () => {
-  const p = fixture(2),
-    { order } = createOrder(input(p), true);
+test("verified payment handles duplicates, late pending and refund without duplicating inventory", async () => {
+  const p = await fixture(2),
+    { order } = await createOrder(input(p), true);
   const payment = {
     id: "payment-test",
     status: "paid" as const,
     amountCents: order.totalCents,
     currency: "BRL",
   };
-  assert.equal(reconcilePayment(order.id, payment).status, "paid");
-  reconcilePayment(order.id, payment);
+  assert.equal((await reconcilePayment(order.id, payment)).status, "paid");
+  await reconcilePayment(order.id, payment);
   assert.equal(
-    reconcilePayment(order.id, { ...payment, status: "awaiting_payment" })
-      .status,
+    (
+      await reconcilePayment(order.id, {
+        ...payment,
+        status: "awaiting_payment",
+      })
+    ).status,
     "paid",
   );
-  assert.equal(getProduct(p.id)!.variants[0].stock, 1);
-  assert.throws(() => releaseOrder(order.id, "cancelled"));
+  assert.equal((await getProduct(p.id))!.variants[0].stock, 1);
+  await assert.rejects(async () => await releaseOrder(order.id, "cancelled"));
   assert.equal(
-    reconcilePayment(order.id, { ...payment, status: "refunded" }).status,
+    (await reconcilePayment(order.id, { ...payment, status: "refunded" }))
+      .status,
     "refunded",
   );
-  reconcilePayment(order.id, { ...payment, status: "refunded" });
-  assert.equal(getProduct(p.id)!.variants[0].stock, 2);
-  assert.equal(reconcilePayment(order.id, payment).status, "refunded");
+  await reconcilePayment(order.id, { ...payment, status: "refunded" });
+  assert.equal((await getProduct(p.id))!.variants[0].stock, 2);
+  assert.equal((await reconcilePayment(order.id, payment)).status, "refunded");
 });
-test("amount, currency and payment identifier mismatches cannot confirm payment", () => {
+test("amount, currency and payment identifier mismatches cannot confirm payment", async () => {
   for (const patch of [{ amountCents: 1 }, { currency: "USD" }]) {
-    const p = fixture(),
-      { order } = createOrder(input(p), true);
+    const p = await fixture(),
+      { order } = await createOrder(input(p), true);
     assert.equal(
-      reconcilePayment(order.id, {
-        id: "bad",
-        status: "paid",
-        amountCents: order.totalCents,
-        currency: "BRL",
-        ...patch,
-      }).status,
+      (
+        await reconcilePayment(order.id, {
+          id: "bad",
+          status: "paid",
+          amountCents: order.totalCents,
+          currency: "BRL",
+          ...patch,
+        })
+      ).status,
       "review_required",
     );
   }
-  const p = fixture(),
-    { order } = createOrder(input(p), true);
-  reconcilePayment(order.id, {
+  const p = await fixture(),
+    { order } = await createOrder(input(p), true);
+  await reconcilePayment(order.id, {
     id: "first",
     status: "awaiting_payment",
     amountCents: order.totalCents,
     currency: "BRL",
   });
   assert.equal(
-    reconcilePayment(order.id, {
-      id: "other",
-      status: "paid",
-      amountCents: order.totalCents,
-      currency: "BRL",
-    }).status,
+    (
+      await reconcilePayment(order.id, {
+        id: "other",
+        status: "paid",
+        amountCents: order.totalCents,
+        currency: "BRL",
+      })
+    ).status,
     "review_required",
   );
 });
-test("quotation rejects payment reconciliation", () => {
-  const p = fixture(),
-    { order } = createOrder(input(p));
-  assert.throws(
-    () =>
-      reconcilePayment(order.id, {
+test("quotation rejects payment reconciliation", async () => {
+  const p = await fixture(),
+    { order } = await createOrder(input(p));
+  await assert.rejects(
+    async () =>
+      await reconcilePayment(order.id, {
         id: "invalid",
         status: "paid",
         amountCents: order.totalCents,
@@ -243,13 +319,13 @@ test("quotation rejects payment reconciliation", () => {
       }),
     /orçamento/,
   );
-  assert.equal(getOrder(order.id)!.status, "quote_requested");
+  assert.equal((await getOrder(order.id))!.status, "quote_requested");
 });
-test("catalog validation rejects placeholders, duplicate SKUs and removal of reserved variants", () => {
-  const p = fixture();
-  assert.throws(
-    () =>
-      saveProduct({
+test("catalog validation rejects placeholders, duplicate SKUs and removal of reserved variants", async () => {
+  const p = await fixture();
+  await assert.rejects(
+    async () =>
+      await saveProduct({
         ...p,
         images: ["/assets/placeholders/frontal.svg", ...p.images.slice(1)],
       }),
@@ -261,22 +337,22 @@ test("catalog validation rejects placeholders, duplicate SKUs and removal of res
     slug: `test-${randomUUID()}`,
     revision: 0,
   };
-  assert.throws(() => saveProduct(duplicate), /SKU/);
-  createOrder(input(p), true);
-  const latest = getProduct(p.id)!;
+  await assert.rejects(async () => await saveProduct(duplicate), /SKU/);
+  await createOrder(input(p), true);
+  const latest = (await getProduct(p.id))!;
   latest.variants[0].id = "changed-variant";
-  assert.throws(() => saveProduct(latest), /reservado/);
+  await assert.rejects(async () => await saveProduct(latest), /reservado/);
 });
-test("password and rate limits fail closed", () => {
+test("password and rate limits fail closed", async () => {
   delete process.env.OCULAR_ADMIN_PASSWORD;
   assert.equal(checkPassword("password"), false);
   process.env.OCULAR_ADMIN_PASSWORD = "a".repeat(32);
   assert.equal(checkPassword("a".repeat(32)), true);
   assert.equal(checkPassword("b".repeat(32)), false);
   const key = randomUUID();
-  assert.equal(rateLimit(key, 2), true);
-  assert.equal(rateLimit(key, 2), true);
-  assert.equal(rateLimit(key, 2), false);
+  assert.equal(await rateLimit(key, 2), true);
+  assert.equal(await rateLimit(key, 2), true);
+  assert.equal(await rateLimit(key, 2), false);
 });
 test("cross-origin mutation and oversized JSON are rejected", async () => {
   assert.throws(() =>
@@ -331,7 +407,9 @@ test("optional telemetry accepts technical metrics and rejects personal fields",
     );
     const record = db()
       .prepare("SELECT body FROM events WHERE type=? ORDER BY id DESC LIMIT 1")
-      .get("telemetry") as { body: string };
+      .get("telemetry") as {
+      body: string;
+    };
     assert.deepEqual(JSON.parse(record.body), {
       event: "metric",
       name: "LCP",
@@ -342,4 +420,127 @@ test("optional telemetry accepts technical metrics and rejects personal fields",
     if (oldSite) process.env.OCULAR_SITE_URL = oldSite;
     else delete process.env.OCULAR_SITE_URL;
   }
+});
+
+test("concurrent reservations cannot oversell the last unit", async () => {
+  const product = await fixture(1);
+  const results = await Promise.allSettled([
+    createOrder(input(product), true),
+    createOrder(input(product), true),
+  ]);
+  assert.equal(
+    results.filter((result) => result.status === "fulfilled").length,
+    1,
+  );
+  assert.equal((await getProduct(product.id))!.variants[0].stock, 0);
+});
+
+test("service updates are versioned and internal notes never reach the customer", async () => {
+  const product = await fixture();
+  const { order } = await createOrder(input(product));
+  const updated = await updateService(order.id, {
+    revision: order.revision,
+    serviceStatus: "quoted",
+    note: "Preferencia interna da equipe",
+  });
+  assert.equal(updated.serviceStatus, "quoted");
+  assert.equal("note" in publicOrder(updated), false);
+  assert.equal("revision" in publicOrder(updated), false);
+  await assert.rejects(
+    () =>
+      updateService(order.id, {
+        revision: order.revision,
+        serviceStatus: "completed",
+        note: "",
+      }),
+    /mudou/,
+  );
+  assert.equal(
+    (await getOrder(order.id))!.note,
+    "Preferencia interna da equipe",
+  );
+});
+
+test("inventory adjustments record the reason and reject stale updates", async () => {
+  const product = await fixture(3);
+  const change = {
+    productId: product.id,
+    variantId: product.variants[0].id,
+    revision: product.revision,
+    stock: 7,
+    priceCents: 39990,
+    reason: "Entrada de mercadoria",
+  };
+  const updated = await updateInventory(change);
+  assert.equal(updated.variants[0].stock, 7);
+  assert.equal(updated.variants[0].priceCents, 39990);
+  await assert.rejects(
+    () => updateInventory({ ...change, stock: 100 }),
+    /mudou/,
+  );
+  const record = db()
+    .prepare("SELECT body FROM events WHERE type=? ORDER BY id DESC LIMIT 1")
+    .get("inventory_updated") as { body: string };
+  assert.equal(JSON.parse(record.body).reason, change.reason);
+});
+
+test("bulk visibility rolls back every change if any revision is stale", async () => {
+  const first = await fixture(),
+    second = await fixture();
+  await assert.rejects(
+    () =>
+      setPublished({
+        published: false,
+        products: [
+          { id: first.id, revision: first.revision },
+          { id: second.id, revision: 0 },
+        ],
+      }),
+    /mudou/,
+  );
+  assert.equal((await getProduct(first.id))!.published, true);
+  assert.equal((await getProduct(first.id))!.revision, first.revision);
+});
+
+test("lens updates persist in the simulator and reject stale or unknown configurations", async () => {
+  const before = await getLenses(),
+    row = before.rows[0];
+  await saveLensPrices({
+    revision: before.revision,
+    changes: [{ id: row.id, priceCents: 123456 }],
+  });
+  const after = await getLenses();
+  assert.equal(after.rows[0].priceCents, 123456);
+  const publicData = await getLensData();
+  assert.equal(
+    publicData[row.brand][row.category][row.line][row.option][0].p,
+    1234.56,
+  );
+  await assert.rejects(
+    () =>
+      saveLensPrices({
+        revision: before.revision,
+        changes: [{ id: row.id, priceCents: 1 }],
+      }),
+    /mudou/,
+  );
+  await assert.rejects(
+    () =>
+      saveLensPrices({
+        revision: after.revision,
+        changes: [{ id: "0".repeat(24), priceCents: 1 }],
+      }),
+    /inválida/,
+  );
+  assert.equal((await getLenses()).rows[0].priceCents, 123456);
+});
+
+test("exports neutralize spreadsheet formulas and preserve quoted customer names", () => {
+  const exported = csv([
+    ["=SUM(A1)", "+cmd", "@formula", 'Pessoa "Teste"', "349,90"],
+  ]);
+  assert(exported.includes('"\'=SUM(A1)"'));
+  assert(exported.includes('"\'+cmd"'));
+  assert(exported.includes('"\'@formula"'));
+  assert(exported.includes('"Pessoa ""Teste"""'));
 });

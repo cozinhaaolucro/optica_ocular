@@ -3,17 +3,20 @@ import { getProducts } from "@/lib/catalog";
 import { canSell } from "@/lib/product";
 import { storeConfig } from "@/lib/config";
 import { apiError, privateJson } from "@/lib/http";
+import { usesPostgres } from "@/lib/storage-mode";
 export async function GET() {
   try {
     await requireAdmin();
-    const products = getProducts(true);
+    const products = await getProducts(true);
     return privateJson({
-      config: storeConfig(),
+      config: await storeConfig(),
       products: products.length,
       verified: products.filter(canSell).length,
       pending: products.filter((p) => !canSell(p)).length,
       payment: "Provedor a definir com o cliente. Nenhuma cobrança ativa.",
-      storage: "SQLite em volume persistente",
+      storage: usesPostgres()
+        ? "Supabase · PostgreSQL"
+        : "SQLite em volume persistente",
       notifications:
         "Solicitações disponíveis no painel; mensagens automáticas não configuradas.",
     });

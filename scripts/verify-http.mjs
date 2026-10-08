@@ -17,6 +17,10 @@ const child = spawn(
   {
     env: {
       ...process.env,
+      DATABASE_URL: "",
+      POSTGRES_URL: "",
+      VERCEL: "0",
+      OCULAR_CATALOG_PREVIEW: "false",
       OCULAR_ADMIN_PASSWORD: secret,
       OCULAR_DB_PATH: join(folder, "test.sqlite"),
       OCULAR_SITE_URL: base,
@@ -272,6 +276,178 @@ try {
       204,
     );
   });
+  await check(
+    "dashboard privado e alterações sem sessão bloqueadas",
+    async () => {
+      for (const path of ["/api/admin/dashboard", "/api/admin/lenses"]) {
+        assert.equal((await req(path)).status, 401);
+      }
+      for (const path of [
+        "/api/admin/inventory",
+        "/api/admin/lenses",
+        "/api/admin/products",
+        `/api/admin/orders/${order.id}`,
+      ]) {
+        assert.equal((await req(path, {}, "PATCH")).status, 401);
+      }
+      const r = await req("/api/admin/dashboard", null, "GET", true);
+      assert.equal(r.status, 200);
+      assert.equal(r.headers.get("cache-control"), "no-store");
+      const d = await r.json();
+      assert.equal(d.products.length, 33);
+      assert.equal(d.orders.length, 1);
+      assert.equal(d.config.database, "SQLite local");
+      assert.equal(d.config.paymentsEnabled, false);
+      assert(d.activity.some((a) => a.type === "admin_login"));
+      assert.equal("token" in d.orders[0], false);
+    },
+  );
+  await check(
+    "etapas e notas internas protegidas, com revisão de atendimento",
+    async () => {
+      const { orders } = await (
+        await req("/api/admin/orders", null, "GET", true)
+      ).json();
+      const change = {
+        revision: orders[0].revision,
+        serviceStatus: "contacted",
+        note: "Nota interna exclusiva da equipe.",
+      };
+      const response = await req(
+        `/api/admin/orders/${order.id}`,
+        change,
+        "PATCH",
+        true,
+      );
+      assert.equal(response.status, 200);
+      const changed = (await response.json()).order;
+      assert.equal(changed.serviceStatus, "contacted");
+      assert.equal(changed.note, change.note);
+      assert.equal(
+        (await req(`/api/admin/orders/${order.id}`, change, "PATCH", true))
+          .status,
+        400,
+      );
+      const customer = (
+        await (await req(`/api/orders/${order.id}`, null, "GET", true)).json()
+      ).order;
+      assert.equal("note" in customer, false);
+      assert.equal("serviceStatus" in customer, false);
+    },
+  );
+  await check(
+    "ajuste de estoque e preço não aceita revisão antiga",
+    async () => {
+      const body = {
+        productId: p.id,
+        variantId: p.variants[0].id,
+        revision: p.revision,
+        stock: 7,
+        priceCents: 123450,
+        reason: "Conferência de teste isolado",
+      };
+      const r = await req("/api/admin/inventory", body, "PATCH", true);
+      assert.equal(r.status, 200);
+      const changed = (await r.json()).product;
+      assert.equal(changed.variants[0].stock, 7);
+      assert.equal(changed.variants[0].priceCents, 123450);
+      assert.equal(
+        (await req("/api/admin/inventory", body, "PATCH", true)).status,
+        400,
+      );
+      const dashboard = await (
+        await req("/api/admin/dashboard", null, "GET", true)
+      ).json();
+      assert(
+        dashboard.activity.some(
+          (a) =>
+            a.type === "inventory_updated" && a.body.reason === body.reason,
+        ),
+      );
+    },
+  );
+  await check("exibição em lote é atômica e pode ser restaurada", async () => {
+    const { products } = await (
+      await req("/api/admin/products", null, "GET", true)
+    ).json();
+    const chosen = products
+      .slice(0, 2)
+      .map((p) => ({ id: p.id, revision: p.revision }));
+    const invalid = { ...chosen[1], revision: chosen[1].revision + 10 };
+    assert.equal(
+      (
+        await req(
+          "/api/admin/products",
+          { products: [chosen[0], invalid], published: false },
+          "PATCH",
+          true,
+        )
+      ).status,
+      400,
+    );
+    let publicCatalog = await (await req("/api/catalog")).json();
+    assert.equal(publicCatalog.products.length, 33);
+    const hidden = await req(
+      "/api/admin/products",
+      { products: chosen, published: false },
+      "PATCH",
+      true,
+    );
+    assert.equal(hidden.status, 200);
+    publicCatalog = await (await req("/api/catalog")).json();
+    assert.equal(publicCatalog.products.length, 31);
+    const current = (await hidden.json()).products.map((p) => ({
+      id: p.id,
+      revision: p.revision,
+    }));
+    assert.equal(
+      (
+        await req(
+          "/api/admin/products",
+          { products: current, published: true },
+          "PATCH",
+          true,
+        )
+      ).status,
+      200,
+    );
+  });
+  await check(
+    "preço de lentes salvo pelo painel chega ao simulador",
+    async () => {
+      const before = await (
+        await req("/api/admin/lenses", null, "GET", true)
+      ).json();
+      assert(before.rows.length > 4000);
+      const row = before.rows[0];
+      const change = {
+        revision: before.revision,
+        changes: [{ id: row.id, priceCents: row.priceCents + 123 }],
+      };
+      assert.equal(
+        (await req("/api/admin/lenses", change, "PATCH", true)).status,
+        200,
+      );
+      assert.equal(
+        (await req("/api/admin/lenses", change, "PATCH", true)).status,
+        400,
+      );
+      const after = await (
+        await req("/api/admin/lenses", null, "GET", true)
+      ).json();
+      assert.equal(after.rows[0].priceCents, row.priceCents + 123);
+      const publicResponse = await req("/api/lenses");
+      assert.equal(publicResponse.headers.get("cache-control"), "no-store");
+      const lenses = await publicResponse.json();
+      const match = lenses[row.brand][row.category][row.line][row.option].find(
+        (c) =>
+          (c.m || "Não informado") === row.material &&
+          (c.i || "") === row.index &&
+          c.t === row.treatment,
+      );
+      assert.equal(Math.round(match.p * 100), row.priceCents + 123);
+    },
+  );
   await check("saída invalida a sessão", async () => {
     assert.equal(
       (await req("/api/admin/session", null, "DELETE", true)).status,

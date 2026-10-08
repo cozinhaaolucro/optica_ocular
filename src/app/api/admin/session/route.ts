@@ -8,15 +8,19 @@ import {
   sameOrigin,
 } from "@/lib/http";
 export async function GET() {
-  return privateJson({
-    authenticated: await adminAuthorized(),
-    configured: !!process.env.OCULAR_ADMIN_PASSWORD,
-  });
+  try {
+    return privateJson({
+      authenticated: await adminAuthorized(),
+      configured: (process.env.OCULAR_ADMIN_PASSWORD?.length || 0) >= 24,
+    });
+  } catch (e) {
+    return apiError(e);
+  }
 }
 export async function POST(request: Request) {
   try {
     sameOrigin(request);
-    limited(request, "admin-login", 6);
+    await limited(request, "admin-login", 6);
     const { password } = z
       .object({ password: z.string().max(500) })
       .parse(await readJson(request));

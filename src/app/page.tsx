@@ -6,8 +6,8 @@ import LensSimulator from "@/components/LensSimulator";
 import BrandStrip from "@/components/BrandStrip";
 export const dynamic = "force-dynamic";
 export const metadata = { alternates: { canonical: "/" } };
-export default function Home() {
-  const products = getProducts();
+export default async function Home() {
+  const products = await getProducts();
   return (
     <main id="conteudo">
       <section className="store-hero">
@@ -41,7 +41,6 @@ export default function Home() {
             loading="eager"
             fetchPriority="high"
           />
-
         </div>
       </section>
       <BrandStrip products={products} />

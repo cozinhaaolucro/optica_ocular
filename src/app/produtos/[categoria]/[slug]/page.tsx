@@ -7,15 +7,15 @@ import { siteUrl } from "@/lib/config";
 import ProductDetails from "@/components/ProductDetails";
 import ProductCard from "@/components/ProductCard";
 export const dynamic = "force-dynamic";
-const find = (category: string, slug: string) =>
-  getProducts().find((p) => p.category === category && p.slug === slug);
+const find = async (category: string, slug: string) =>
+  (await getProducts()).find((p) => p.category === category && p.slug === slug);
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ categoria: string; slug: string }>;
 }): Promise<Metadata> {
   const { categoria, slug } = await params;
-  const p = find(categoria, slug);
+  const p = await find(categoria, slug);
   if (!p) return { title: "Modelo não encontrado", robots: { index: false } };
   const description = p.verified
     ? p.description
@@ -37,9 +37,9 @@ export default async function ProductPage({
   params: Promise<{ categoria: string; slug: string }>;
 }) {
   const { categoria, slug } = await params;
-  const p = find(categoria, slug);
+  const p = await find(categoria, slug);
   if (!p) notFound();
-  const related = getProducts()
+  const related = (await getProducts())
     .filter((x) => x.category === p.category && x.id !== p.id)
     .slice(0, 3);
   const jsonLd = {

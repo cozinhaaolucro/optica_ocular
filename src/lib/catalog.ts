@@ -1,26 +1,26 @@
 import "server-only";
 import { z } from "zod";
-import { db, audit, transaction } from "./db";
+import { query, execute, audit, transaction } from "./persistence";
 import { canSell } from "./product";
 import { referenceProducts } from "./catalog-seed";
 import { isCatalogPreview } from "./storage-mode";
 import type { Product, CartLine, CartItem } from "./types";
 
-export function getProducts(includeDrafts = false): Product[] {
+export async function getProducts(includeDrafts = false): Promise<Product[]> {
   if (isCatalogPreview())
     return referenceProducts().sort((a, b) => a.id.localeCompare(b.id));
   return (
-    db().prepare("SELECT body FROM products ORDER BY id").all() as {
-      body: string;
-    }[]
+    await query<{ body: string }>("SELECT body FROM products ORDER BY id")
   )
     .map((row) => JSON.parse(row.body) as Product)
     .filter((p) => includeDrafts || p.published);
 }
-export function getProduct(id: string): Product | undefined {
+export async function getProduct(id: string): Promise<Product | undefined> {
   if (isCatalogPreview()) return referenceProducts().find((p) => p.id === id);
-  const row = db().prepare("SELECT body FROM products WHERE id=?").get(id) as
-    { body: string } | undefined;
+  const [row] = await query<{ body: string }>(
+    "SELECT body FROM products WHERE id=?",
+    [id],
+  );
   return row ? JSON.parse(row.body) : undefined;
 }
 const localImage = z
@@ -70,21 +70,20 @@ export const productSchema = z
       .nullable(),
   })
   .strict();
-export function saveProduct(input: unknown) {
+export async function saveProduct(input: unknown) {
   return transaction(() => saveProductInTransaction(input));
 }
-function saveProductInTransaction(input: unknown) {
+async function saveProductInTransaction(input: unknown) {
   const p = productSchema.parse(input);
-  const previous = getProduct(p.id);
+  const previous = await getProduct(p.id);
   if (previous && (previous.revision || 0) !== p.revision)
     throw new Error(
       "Este produto mudou desde que você o abriu. Atualize o cadastro antes de salvar.",
     );
   if (new Set(p.variants.map((v) => v.id)).size !== p.variants.length)
     throw new Error("Variantes com identificadores repetidos.");
-  const orders = db().prepare("SELECT body FROM orders").all() as {
-    body: string;
-  }[];
+  const orders = await query<{ body: string }>("SELECT body FROM orders");
+  const products = await getProducts(true);
   if (
     previous &&
     orders.some((row) => {
@@ -102,16 +101,16 @@ function saveProductInTransaction(input: unknown) {
     throw new Error(
       "Não remova uma variante que tem estoque reservado em pedido.",
     );
+  const skus = p.variants.map((v) => v.sku).filter(Boolean);
   if (
-    p.verified &&
-    (new Set(p.variants.map((v) => v.sku)).size !== p.variants.length ||
-      getProducts(true).some(
-        (other) =>
-          other.id !== p.id &&
-          other.variants.some(
-            (v) => v.sku && p.variants.some((variant) => variant.sku === v.sku),
-          ),
-      ))
+    new Set(skus).size !== skus.length ||
+    products.some(
+      (other) =>
+        other.id !== p.id &&
+        other.variants.some(
+          (v) => v.sku && p.variants.some((variant) => variant.sku === v.sku),
+        ),
+    )
   )
     throw new Error("Cada variante deve ter um SKU único.");
   if (p.verified && !canSell({ ...p, published: true }))
@@ -119,7 +118,7 @@ function saveProductInTransaction(input: unknown) {
       "Complete fotos, material, SKU, cor, medidas e preço confirmado para validar o produto.",
     );
   if (
-    getProducts(true).some(
+    products.some(
       (other) =>
         other.id !== p.id &&
         other.slug === p.slug &&
@@ -128,10 +127,11 @@ function saveProductInTransaction(input: unknown) {
   )
     throw new Error("Já existe um produto com este endereço.");
   p.revision = (previous?.revision || 0) + 1;
-  db()
-    .prepare("INSERT OR REPLACE INTO products VALUES (?,?)")
-    .run(p.id, JSON.stringify(p));
-  audit("catalog_updated", { productId: p.id });
+  await execute(
+    "INSERT INTO products(id,body) VALUES (?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body",
+    [p.id, JSON.stringify(p)],
+  );
+  await audit("catalog_updated", { productId: p.id, name: p.name });
   return p;
 }
 export const linesSchema = z
@@ -146,21 +146,25 @@ export const linesSchema = z
   )
   .min(1)
   .max(30);
-export function resolveLines(input: unknown, selling = false): CartItem[] {
+export async function resolveLines(
+  input: unknown,
+  selling = false,
+): Promise<CartItem[]> {
   const lines: CartLine[] = linesSchema.parse(input);
   if (
     new Set(lines.map((l) => `${l.productId}:${l.variantId}`)).size !==
     lines.length
   )
     throw new Error("Itens repetidos no carrinho.");
-  return lines.map((line) => {
-    const p = getProduct(line.productId);
+  const items: CartItem[] = [];
+  for (const line of lines) {
+    const p = await getProduct(line.productId);
     const v = p?.variants.find((v) => v.id === line.variantId);
     if (!p?.published || !v)
       throw new Error("Um item do carrinho não está mais disponível.");
     if (selling && (!canSell(p) || v.stock < line.quantity))
       throw new Error(`Confira a disponibilidade de ${p.name}.`);
-    return {
+    items.push({
       ...line,
       name: p.name,
       brand: p.brand,
@@ -170,6 +174,7 @@ export function resolveLines(input: unknown, selling = false): CartItem[] {
       priceCents: v.priceCents,
       image: p.images[0] || "",
       available: canSell(p) && v.stock >= line.quantity,
-    };
-  });
+    });
+  }
+  return items;
 }

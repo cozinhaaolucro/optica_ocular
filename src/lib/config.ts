@@ -8,12 +8,12 @@ export function siteUrl() {
     "",
   );
 }
-export function storeConfig(): StoreConfig {
+export async function storeConfig(): Promise<StoreConfig> {
   return {
     paymentsEnabled: false,
     shippingEnabled: false,
     pickupEnabled: process.env.OCULAR_PICKUP_ENABLED !== "false",
     telemetryEnabled: process.env.OCULAR_TELEMETRY_ENABLED === "true",
-    catalogReady: getProducts().some(canSell),
+    catalogReady: (await getProducts()).some(canSell),
   };
 }

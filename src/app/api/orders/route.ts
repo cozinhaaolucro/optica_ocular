@@ -10,8 +10,8 @@ import {
 export async function POST(request: Request) {
   try {
     sameOrigin(request);
-    limited(request, "orders", 15);
-    const { order, accessToken } = createOrder(await readJson(request));
+    await limited(request, "orders", 15);
+    const { order, accessToken } = await createOrder(await readJson(request));
     if (accessToken)
       (await cookies()).set(`ocular-order-${order.id}`, accessToken, {
         httpOnly: true,

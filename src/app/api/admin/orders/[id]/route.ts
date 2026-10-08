@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth";
-import { publicOrder, updateFulfillment } from "@/lib/orders";
+import { adminOrder, updateService } from "@/lib/orders";
 import { apiError, privateJson, readJson, sameOrigin } from "@/lib/http";
 export async function PATCH(
   request: Request,
@@ -9,8 +9,8 @@ export async function PATCH(
     sameOrigin(request);
     await requireAdmin();
     return privateJson({
-      order: publicOrder(
-        updateFulfillment((await params).id, await readJson(request)),
+      order: adminOrder(
+        await updateService((await params).id, await readJson(request)),
       ),
     });
   } catch (e) {

@@ -95,7 +95,7 @@ export default function LensSimulator({
     setError("");
     try {
       if (!data) {
-        const r = await fetch("/assets/lentes-data.json");
+        const r = await fetch("/api/lenses", { cache: "no-store" });
         if (!r.ok) throw new Error();
         setData(await r.json());
       }

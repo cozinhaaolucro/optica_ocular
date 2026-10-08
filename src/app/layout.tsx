@@ -7,6 +7,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import Telemetry from "@/components/Telemetry";
 import LogoFilters from "@/components/LogoFilters";
+import StoreChrome from "@/components/StoreChrome";
 import { siteUrl } from "@/lib/config";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -44,9 +45,13 @@ export default function RootLayout({
       <body className="commerce-site">
         <LogoFilters />
         <CartProvider>
-          <SiteHeader />
+          <StoreChrome>
+            <SiteHeader />
+          </StoreChrome>
           {children}
-          <SiteFooter />
+          <StoreChrome>
+            <SiteFooter />
+          </StoreChrome>
           <Telemetry
             enabled={process.env.OCULAR_TELEMETRY_ENABLED === "true"}
           />

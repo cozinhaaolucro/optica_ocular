@@ -1,7 +1,7 @@
-import { db } from "@/lib/db";
-export function GET() {
+import { query } from "@/lib/persistence";
+export async function GET() {
   try {
-    db().prepare("SELECT 1").get();
+    await query("SELECT 1");
     return Response.json(
       { status: "ok" },
       { headers: { "Cache-Control": "no-store" } },

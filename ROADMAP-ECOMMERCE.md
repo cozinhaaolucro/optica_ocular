@@ -1,63 +1,31 @@
-# Óptica Ocular — roadmap atual do e-commerce
+# Óptica Ocular — próximos passos
 
-Atualizado em 7 de outubro de 2026, a partir do commit `f7ebdd3`.
+Atualizado em 8 de outubro de 2026.
 
-A fase atual é a validação das telas pelo cliente. O catálogo público na Vercel agora usa os produtos de referência do projeto sem abrir SQLite, permitindo navegar por home, categorias, fichas e carrinho. O banco e a operação locais continuam presentes. Persistência publicada, dados comerciais aprovados e pagamento são etapas posteriores à validação.
+O site conta com catálogo, carrinho, solicitações e simulador de lentes. Nesta entrega, a operação foi conectada ao PostgreSQL e ao Storage do Supabase para funcionar na Vercel. O painel reúne visão geral, catálogo, variantes, fotos, preços e estoque, atendimentos, clientes, lentes, histórico e operação.
 
-A correção foi verificada com 17 testes, 8 verificações HTTP da operação local e renderização das 33 fichas sem disco gravável. Detalhes em [verificação da Vercel](qa/vercel-catalog-validation.md). Ainda não há cobrança real, e a mudança precisa de novo deploy para chegar ao domínio.
+## Situação das etapas 1 a 5
 
-A checagem final também corrigiu o submenu Coleções por estado aberto, toque e teclado, além de acrescentar o espaço lateral nas linhas do simulador. A homologação visual do domínio publicado continua sendo o próximo passo após o deploy.
+| Etapa                        | Situação                                                                                                                                                                         | O que falta para a operação comercial                                                                                                              |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Publicação e persistência | Implementado PostgreSQL remoto, fotos no Storage e migração automática protegida. SQLite mantido somente como alternativa local.                                                 | Definir backup e retenção no plano Supabase; comprovar restauração em ambiente separado.                                                           |
+| 2. Interface e jornada       | Home, marcas, simulador com altura estável, preços legíveis, coleções por teclado/toque e confirmação recuperável. Painel dedicado com navegação e estados de carregamento/erro. | Validação de apresentação e jornada pelo cliente, incluindo seus dispositivos habituais.                                                           |
+| 3. Catálogo real e lentes    | Cadastro completo, fotos 4:3, SKU único, revisão simultânea, preços e estoque. Preços de lentes editáveis no painel e aplicados no simulador.                                    | Receber e conferir fotos, modelos, variantes, medidas, valores e estoque reais. Aprovar as linhas de lentes oferecidas.                            |
+| 4. Operação consultiva       | Solicitações persistidas, etapas de atendimento, notas internas privadas, clientes, busca, filtros, paginação, CSV e histórico.                                                  | Nomear responsável, combinar prazo de resposta e revisar políticas com a loja. Canal automático de notificações depende de escolha e configuração. |
+| 5. Pagamento                 | Estrutura e regras comerciais preparadas; cobrança desativada conforme combinado.                                                                                                | Cliente escolher provedor. Integrar checkout, webhooks, cancelamentos, reembolsos e homologar antes de cobrar.                                     |
 
-Diagnóstico e evidências: [nova auditoria](qa/ecommerce-reaudit-2026-10-07.md). O [roadmap anterior](qa/roadmap-anterior-2026-10-07.md) foi preservado como histórico; suas pendências não devem ser tratadas automaticamente como atuais.
+## Apresentação ao cliente
 
-## Escopo mantido
+1. Mostrar a jornada pública de modelo até solicitação e o simulador de lentes.
+2. Apresentar a visão geral e abrir a ficha de um modelo no painel.
+3. Demonstrar estoque, filtros, atendimento e histórico, usando dados de homologação identificados em ambiente separado.
+4. Mostrar os preços de lentes e explicar que a equipe poderá atualizá-los sem novo deploy.
+5. Fechar a coleta do catálogo real, a rotina de resposta e a decisão futura de pagamento.
 
-- Óculos de sol e armações como catálogo comercial inicial.
-- Lentes por atendimento separado, com o simulador como apoio ao orçamento.
-- Retirada na loja como entrega inicial.
-- Fotos de produtos em proporção 4:3, correspondentes a cada modelo; placeholders enquanto o cadastro real não chega.
-- Pagamento na última etapa, após escolha com o cliente.
-- Valores fornecidos da Essilor usados como referência atual conforme orientação recebida; atualização posterior pela loja, sem acrescentar avisos de preparação à interface.
-- Preservar a apresentação limpa, preços legíveis e decisões visuais já aprovadas.
+Os 33 cadastros iniciais são referências, sem fotografias comerciais aprovadas, ficha conferida ou estoque real. Não há receita de vendas inventada no painel. Lentes continuam por atendimento separado; a entrega inicial é retirada na loja.
 
-## O que já está entregue
+## Depois da aprovação
 
-| Frente | Base existente |
-| --- | --- |
-| Experiência | Home, imagens isoladas nas categorias, faixa de marcas, catálogo com busca/filtros/ordem, ficha/galeria, carrinho e preços BRL. |
-| Cadastro | Banco SQLite, painel, variantes/SKU/medidas/preço/estoque, revisão concorrente e upload WebP 4:3. |
-| Orçamento | Contato sem criação de conta, retirada, total calculado no servidor, registro persistido, idempotência e confirmação protegida. |
-| Lentes | Uma seção com simulador de quatro etapas e 4.347 configurações em oito grupos de marcas. |
-| Base de operação | Testes de estoque e conciliação, contrato para futuro provedor, CI, health check, backup, metadata e políticas. |
+Cadastre primeiro um conjunto pequeno de modelos reais, complete as fotografias e confira cada variante. Receba uma solicitação de homologação pela jornada pública, acompanhe-a até a conclusão e confirme o procedimento da equipe. Defina backup, restauração e responsabilidade pelos dados. Só então avance para a integração de pagamento escolhida pelo cliente.
 
-Os 33 produtos locais continuam sem fotos cadastradas, verificação, preço confirmado e estoque positivo. Funções testadas de pagamento e arquivos de publicação não equivalem a operação comercial homologada.
-
-## Após a validação do cliente — etapas 1 a 5
-
-Os bloqueios comerciais abaixo se referem à abertura da operação. Não impedem a validação visual do catálogo de referência publicado. Durante essa validação, a prioridade é publicar a correção e revisar os fluxos de navegação e apresentação; persistência de orçamento e edição pelo painel não estão disponíveis no modo de catálogo da Vercel.
-
-| Etapa | Prioridade / responsável sugerido | Entregas | Critério de conclusão |
-| --- | --- | --- | --- |
-| **1. Resolver a publicação e a persistência** | **P0** · desenvolvimento + responsável pela hospedagem | Definir destino. Para manter SQLite e mídia local, usar instância Node 24 com volume durável. Se a Vercel for mantida, adaptar banco e uploads para serviços externos. Configurar ambiente de homologação e domínio. | Um produto, uma foto e um orçamento sobrevivem a reinício e republicação. Banco e mídia têm backup e restauração comprovados em ambiente isolado. |
-| **2. Corrigir o uso e homologar a interface** | **P1** · desenvolvimento + design | Corrigir Coleções por teclado/toque; fechamento e foco do submenu; recuperação segura da confirmação após perda de resposta. Conferir home estreita, faixa de marcas e as quatro etapas do simulador. Ajustar pausa/retomada sem poluir a apresentação. | Home → categoria → produto → carrinho → orçamento funciona com mouse, teclado e toque na hospedagem escolhida. Retry preserva um único orçamento e acesso à confirmação. Simulador mantém o tamanho e foco visível. |
-| **3. Cadastrar o catálogo real e aprovar lentes** | **P0 para cobrança** · loja + cadastro/desenvolvimento | Receber fotos, SKU, variantes, medidas, preço e estoque de um primeiro conjunto real. Validar e publicar os itens prontos. Conferir internamente valores e linhas de lentes oferecidas; melhorar seleção por índice e combinações disponíveis. | Todos os itens do lançamento correspondem a modelos reais, com fotos e dados aprovados. O painel permite atualizações, e o servidor bloqueia venda de itens não aprovados. A equipe consegue reproduzir os orçamentos de lentes escolhidos para homologação. |
-| **4. Preparar a operação consultiva** | **P1** · loja + desenvolvimento | Adicionar estados de atendimento, observações e busca/paginação de solicitações. Definir responsável e rotina de resposta; notificações conforme o canal acordado. Revisar políticas, configurar alertas e validar descoberta/metadata no domínio final. | A equipe recebe, encontra, acompanha e conclui um orçamento real de homologação. Contatos privados seguem protegidos; registros antigos continuam acessíveis; falhas e restauração têm procedimento conhecido. |
-| **5. Integrar pagamento e abrir venda paga** | **P0 para cobrança** · cliente + loja + desenvolvimento | Escolher provedor na etapa final. Implementar criação de pagamento, webhooks autenticados, expiração de reserva, confirmação, falha/cancelamento/reembolso e notificações. Homologar sandbox e retirada. Habilitar cobrança apenas com catálogo e operação prontos. | Testes de pagamento aprovado, recusado, pendente, duplicado e atrasado; estoque/reserva coerentes; pedido visível à equipe; custo final claro; retirada e reembolso conferidos. Nenhuma cobrança duplicada ou venda indevida na homologação. |
-
-A coleta de fotos e dados pode começar junto da etapa 1. A implementação visual da etapa 2 não precisa esperar todo o catálogo. A jornada consultiva pode abrir após as etapas 1–4; a venda paga depende da etapa 5. Não há necessidade de antecipar a escolha do provedor de pagamento.
-
-## Ordem imediata de trabalho
-
-1. Resolver a incompatibilidade entre Vercel e o armazenamento local atual.
-2. Corrigir o submenu Coleções e o cenário de retry sem cookie de confirmação.
-3. Homologar a interface em navegador e iniciar o cadastro real com a loja.
-4. Fechar a rotina de atendimento e a recuperação dos dados.
-5. Escolher e integrar pagamento, como combinado.
-
-Não há motivo, neste diagnóstico, para iniciar um redesenho amplo. Melhorias adicionais de filtros, performance, recomendações e conversão devem seguir os problemas observados na homologação e depois no uso real.
-
-## Evidências e limites
-
-Nesta revisão: lint e build passaram, 14 testes comerciais e 8 verificações HTTP passaram, e a auditoria de dependências de produção não reportou vulnerabilidades. As verificações HTTP usaram ambiente isolado. O navegador da sessão estava indisponível; aparência, responsividade e interações reais continuam pendentes de homologação. Não foi auditado um deploy externo.
-
-O guia [OPERACAO-ECOMMERCE.md](OPERACAO-ECOMMERCE.md) descreve a arquitetura atual com disco persistente. A adição de `vercel.json` não a torna compatível automaticamente com armazenamento efêmero. [Referência oficial da Vercel](https://vercel.com/kb/guide/is-sqlite-supported-in-vercel).
+Guia da equipe: [GUIA-PAINEL.md](GUIA-PAINEL.md). Configuração e recuperação: [OPERACAO-ECOMMERCE.md](OPERACAO-ECOMMERCE.md). Auditoria anterior: [qa/ecommerce-reaudit-2026-10-07.md](qa/ecommerce-reaudit-2026-10-07.md); ela registra o estado anterior à integração Supabase e não representa o painel atual.

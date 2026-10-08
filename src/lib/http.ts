@@ -1,12 +1,17 @@
 import "server-only";
 import { ZodError } from "zod";
 import { createHash } from "node:crypto";
-import { rateLimit, audit } from "./db";
+import { rateLimit } from "./persistence";
 import { PersistenceUnavailableError } from "./storage-mode";
 export function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   const allowed = new URL(process.env.OCULAR_SITE_URL || request.url).origin;
-  if (!origin || origin !== allowed)
+  const url = new URL(request.url);
+  const local =
+    process.env.VERCEL !== "1" &&
+    ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) &&
+    origin === url.origin;
+  if (!origin || (origin !== allowed && !local))
     throw new Error("Origem da solicitação inválida.");
 }
 export async function readJson(request: Request) {
@@ -32,20 +37,29 @@ export async function readJson(request: Request) {
     throw new Error("Dados inválidos.");
   }
 }
-export function limited(request: Request, area: string, limit = 30) {
+export async function limited(request: Request, area: string, limit = 30) {
   const ip =
     process.env.OCULAR_TRUST_PROXY === "true"
       ? request.headers.get("x-forwarded-for")?.split(",")[0] || "unknown"
       : "local";
   const key = createHash("sha256").update(`${area}:${ip}`).digest("hex");
-  if (!rateLimit(key, limit))
-    throw new Error("Muitas tentativas. Aguarde um minuto e tente novamente.");
+  if (!(await rateLimit(key, limit)))
+    throw Object.assign(
+      new Error("Muitas tentativas. Aguarde um minuto e tente novamente."),
+      { status: 429 },
+    );
 }
 export function apiError(error: unknown, status = 400) {
+  if (
+    error instanceof Error &&
+    "status" in error &&
+    typeof error.status === "number"
+  )
+    status = error.status;
   if (error instanceof PersistenceUnavailableError)
     return privateJson({ error: error.message }, 503);
   if (error instanceof ZodError)
-    return Response.json(
+    return privateJson(
       {
         error: "Confira os dados informados.",
         fields: error.issues.map((i) => ({
@@ -53,20 +67,19 @@ export function apiError(error: unknown, status = 400) {
           message: i.message,
         })),
       },
-      { status },
+      status,
     );
   const message =
     error instanceof Error
       ? error.message
       : "Não foi possível concluir. Tente novamente.";
   if (message.includes("SQLITE") || message.includes("ENOENT")) {
-    audit("server_error", { code: "storage" });
-    return Response.json(
+    return privateJson(
       { error: "Serviço temporariamente indisponível. Tente novamente." },
-      { status: 503 },
+      503,
     );
   }
-  return Response.json({ error: message }, { status });
+  return privateJson({ error: message }, status);
 }
 export function privateJson(body: unknown, status = 200) {
   return Response.json(body, {

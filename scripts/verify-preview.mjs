@@ -14,6 +14,9 @@ const child = spawn(
   {
     env: {
       ...process.env,
+      DATABASE_URL: "",
+      POSTGRES_URL: "",
+      OCULAR_CATALOG_PREVIEW: "true",
       VERCEL: "1",
       OCULAR_DB_PATH: resolve("package.json", "preview.sqlite"),
       OCULAR_SITE_URL: base,

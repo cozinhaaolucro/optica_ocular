@@ -3,7 +3,7 @@ import { siteUrl } from "@/lib/config";
 import { getProducts } from "@/lib/catalog";
 import { canSell, productHref } from "@/lib/product";
 export const dynamic = "force-dynamic";
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (process.env.OCULAR_INDEXING_ENABLED !== "true") return [];
   const root = siteUrl();
   return [
@@ -20,11 +20,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       "/trocas",
       "/privacidade",
     ].map((path) => ({ url: root + path })),
-    ...getProducts()
-      .filter(canSell)
-      .map((p) => ({
-        url: root + productHref(p),
-        images: p.images.map((i) => root + i),
-      })),
+    ...(await getProducts()).filter(canSell).map((p) => ({
+      url: root + productHref(p),
+      images: p.images.map((i) => root + i),
+    })),
   ];
 }

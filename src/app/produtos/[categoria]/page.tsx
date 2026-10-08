@@ -27,7 +27,7 @@ export default async function Category({
   const { categoria } = await params;
   const c = categories.find((c) => c.id === categoria);
   if (!c) notFound();
-  const products = getProducts().filter((p) => p.category === c.id);
+  const products = (await getProducts()).filter((p) => p.category === c.id);
   return (
     <main id="conteudo" className="store-page">
       <div className="store-page-heading">
