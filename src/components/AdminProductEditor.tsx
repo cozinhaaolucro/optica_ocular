@@ -225,8 +225,13 @@ export default function AdminProductEditor({
                 min="0.01"
                 max="100000"
                 step="0.01"
-                required
-                value={v.priceCents / 100}
+                required={
+                  selected.published ||
+                  selected.priceConfirmed ||
+                  selected.verified
+                }
+                value={v.priceCents > 0 ? v.priceCents / 100 : ""}
+                placeholder="A preencher"
                 onChange={(e) =>
                   variant(i, {
                     priceCents: Math.round(Number(e.target.value) * 100),
@@ -242,7 +247,8 @@ export default function AdminProductEditor({
                 id={`${v.id}-promotion`}
                 type="number"
                 min="0.01"
-                max={(v.priceCents - 1) / 100}
+                max={v.priceCents > 0 ? (v.priceCents - 1) / 100 : undefined}
+                disabled={v.priceCents <= 0}
                 step="0.01"
                 value={
                   v.promotionPriceCents == null

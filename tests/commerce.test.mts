@@ -139,6 +139,38 @@ test("seed is honest: placeholders, no confirmed stock or price", async () => {
     ),
   );
 });
+test("unpriced drafts stay private and cannot be validated or sold", async () => {
+  const p = structuredClone((await getProducts())[0]);
+  p.id = `draft-${randomUUID()}`;
+  p.slug = p.id;
+  p.revision = 0;
+  p.published = false;
+  p.verified = false;
+  p.priceConfirmed = false;
+  p.variants[0].priceCents = 0;
+  const saved = await saveProduct(p);
+  assert.equal(saved.variants[0].priceCents, 0);
+  assert(!(await getProducts()).some((item) => item.id === saved.id));
+  assert.equal(canSell(saved), false);
+  await assert.rejects(() => saveProduct({ ...saved, published: true }));
+  await assert.rejects(() => saveProduct({ ...saved, priceConfirmed: true }));
+  await assert.rejects(() => saveProduct({ ...saved, verified: true }));
+  await assert.rejects(() =>
+    setPublished({
+      products: [{ id: saved.id, revision: saved.revision }],
+      published: true,
+    }),
+  );
+  await assert.rejects(() => resolveLines(lines(saved)));
+  const priced = await saveProduct({
+    ...saved,
+    published: true,
+    variants: saved.variants.map((v) => ({ ...v, priceCents: 34990 })),
+  });
+  assert.equal(priced.variants[0].priceCents, 34990);
+  assert((await getProducts()).some((item) => item.id === saved.id));
+});
+
 test("server prices prevail; extra totals, fractional quantities and duplicates are rejected", async () => {
   const p = await fixture();
   assert.equal((await resolveLines(lines(p, 2)))[0].priceCents, 34990);

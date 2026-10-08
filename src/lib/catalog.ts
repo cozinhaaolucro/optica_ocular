@@ -55,7 +55,7 @@ export const productSchema = z
             lensWidth: dimension,
             bridge: dimension,
             temple: dimension,
-            priceCents: z.number().int().min(1).max(10000000),
+            priceCents: z.number().int().min(0).max(10000000),
             promotionPriceCents: z
               .number()
               .int()
@@ -86,7 +86,19 @@ export const productSchema = z
       })
       .nullable(),
   })
-  .strict();
+  .strict()
+  .superRefine((p, ctx) => {
+    if (p.published || p.priceConfirmed || p.verified) {
+      p.variants.forEach((v, index) => {
+        if (v.priceCents <= 0)
+          ctx.addIssue({
+            code: "custom",
+            path: ["variants", index, "priceCents"],
+            message: "Informe o preço antes de exibir ou validar o produto.",
+          });
+      });
+    }
+  });
 export async function saveProduct(input: unknown) {
   return transaction(() => saveProductInTransaction(input));
 }

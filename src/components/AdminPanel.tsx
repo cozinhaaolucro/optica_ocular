@@ -365,7 +365,7 @@ export default function AdminPanel() {
               lensWidth: null,
               bridge: null,
               temple: null,
-              priceCents: 1,
+              priceCents: 0,
               stock: 0,
             },
           ],
@@ -505,7 +505,7 @@ export default function AdminPanel() {
   const filteredProducts = products.filter(
     (p) =>
       matched(
-        `${p.name} ${p.brand} ${p.variants.map((v) => v.sku).join(" ")}`,
+        `${p.name} ${p.brand} ${p.tags.join(" ")} ${p.variants.map((v) => v.sku).join(" ")}`,
       ) &&
       (!brandFilter || p.brand === brandFilter) &&
       (filter === "all" ||
@@ -559,7 +559,7 @@ export default function AdminPanel() {
       type="search"
       placeholder={
         tab === "products"
-          ? "Buscar modelo, marca ou SKU"
+          ? "Buscar modelo, marca, SKU ou tag"
           : "Buscar nos registros"
       }
       value={query}
@@ -979,7 +979,7 @@ export default function AdminPanel() {
                             p.category,
                             v.sku,
                             v.label,
-                            decimal(v.priceCents),
+                            v.priceCents > 0 ? decimal(v.priceCents) : "",
                             v.promotionPriceCents == null
                               ? ""
                               : decimal(v.promotionPriceCents),
@@ -1067,7 +1067,7 @@ export default function AdminPanel() {
                           </button>
                         </td>
                         <td className="admin-numeric">
-                          {money(minPrice(p))}
+                          {minPrice(p) > 0 ? money(minPrice(p)) : "Sem preço"}
                           {p.variants.some(isOnPromotion) && (
                             <small>Em promoção</small>
                           )}
@@ -1142,7 +1142,7 @@ export default function AdminPanel() {
                       p.name,
                       v.sku,
                       v.color,
-                      decimal(v.priceCents),
+                      v.priceCents > 0 ? decimal(v.priceCents) : "",
                       v.promotionPriceCents == null
                         ? ""
                         : decimal(v.promotionPriceCents),
@@ -1289,7 +1289,9 @@ export default function AdminPanel() {
                             <del>{money(v.priceCents)}</del>
                           </small>
                         )}
-                        {money(sellingPrice(v))}
+                        {sellingPrice(v) > 0
+                          ? money(sellingPrice(v))
+                          : "Sem preço"}
                       </td>
                       <td>
                         <span
@@ -1307,7 +1309,8 @@ export default function AdminPanel() {
                               setInventory({
                                 product: p,
                                 variant: v,
-                                price: decimal(v.priceCents),
+                                price:
+                                  v.priceCents > 0 ? decimal(v.priceCents) : "",
                                 promotion:
                                   v.promotionPriceCents == null
                                     ? ""

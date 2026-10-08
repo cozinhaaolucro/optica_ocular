@@ -41,7 +41,13 @@ export function canSell(p: Product) {
     p.variants.length > 0 &&
     p.variants.every(
       (v) =>
-        v.sku.trim() && v.color.trim() && v.lensWidth && v.bridge && v.temple,
+        v.sku.trim() &&
+        v.color.trim() &&
+        v.lensWidth &&
+        v.bridge &&
+        v.temple &&
+        Number.isInteger(v.priceCents) &&
+        v.priceCents > 0,
     )
   );
 }

@@ -4,11 +4,13 @@ Acesse `/admin` no endereço da loja e entre com a senha da equipe. A sessão du
 
 ## Catálogo
 
-Busque por nome, marca ou SKU. Os filtros mostram coleção, marca e situação do cadastro. **Novo modelo** abre uma ficha; **Duplicar** cria um rascunho com SKU vazio e estoque zero para preencher.
+Busque por nome, marca, SKU ou tag. Os filtros mostram coleção, marca e situação do cadastro. **Novo modelo** abre uma ficha; **Duplicar** cria um rascunho com SKU vazio e estoque zero para preencher.
 
 Preencha nome, marca, coleção, material, descrição e variantes. Cada variante precisa de SKU único, cor, largura da lente, ponte, haste, preço e estoque. Inclua três fotos distintas: frontal, lateral e detalhe. O painel aceita JPG, PNG ou WebP, até 8 MB, mínimo 600 × 450 px, e prepara as imagens no quadro 4:3.
 
 **Exibir no catálogo**, **Preço confirmado** e **Ficha conferida** são controles separados. A ficha só pode ser conferida depois de completar os dados. Selecione modelos na lista para exibir ou ocultar vários de uma vez. Ocultar preserva o cadastro e seu histórico.
+
+É possível salvar um rascunho oculto com o preço em branco. A lista mostra **Sem preço** e as exportações deixam o valor vazio. Antes de exibir ou validar o cadastro, preencha um preço positivo em todas as variantes. Para encontrar o primeiro lote extraído dos vídeos, busque a tag **videos-20261008** e selecione **Ocultos**; confira as peças com o [plano da primeira leva](PRIMEIRA-LEVA-PRODUTOS.md).
 
 Salve antes de sair da ficha. Se outra pessoa atualizar o mesmo modelo, o painel pede que você atualize os dados antes de salvar novamente.
 
