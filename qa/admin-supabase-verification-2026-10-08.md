@@ -36,3 +36,9 @@ Não há integração de pagamento ou notificações externas. O catálogo ainda
 Revisão local na porta 4012, com acesso realizado pelo responsável. As oito seções abriram. Busca por Ray-Ban retornou três modelos; a ficha exibiu dados, três posições de foto e variantes. O ajuste de estoque abriu com preço, saldo e motivo. O filtro Varilux + XR encontrou 170 configurações com os valores editáveis. Atendimentos e Clientes apresentaram estados vazios; Histórico e Operação carregaram registros e serviços reais.
 
 A sidebar foi alterada para mostrar apenas o símbolo original da Ocular. A página foi conferida em viewport desktop de 1365 × 900 e celular de 390 × 844. Não houve overflow horizontal do documento; navegação e tabelas mantêm rolagem interna. Nenhum dado comercial foi alterado pela revisão visual.
+
+## Domínio público
+
+Em `https://optica-ocular.vercel.app`, o login administrativo retornou 200 com a credencial configurada, o dashboard consultou PostgreSQL e Storage, e a tabela administrativa retornou 4.347 configurações de lentes. Health check, home, categorias, ficha, carrinho, checkout e lentes retornaram 200. APIs administrativas sem sessão retornaram 401. A sessão criada para a conferência HTTP foi encerrada.
+
+O primeiro CI interrompeu em `npm ci`: o npm 11.19 do runner Linux identificou duas dependências opcionais ausentes no lock gerado pelo npm 11.6 local. O lock foi regenerado com a versão do runner, acrescentando `@emnapi/core` e `@emnapi/runtime` 1.11.3; versões das dependências existentes foram preservadas. A instalação em dry-run para Linux passou com npm 11.19. O CI completo é conferido após esse ajuste.
