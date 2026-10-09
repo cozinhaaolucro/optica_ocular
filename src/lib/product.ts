@@ -28,6 +28,12 @@ export const lowestPricedVariant = (p: Product) =>
   p.variants.reduce((lowest, v) =>
     sellingPrice(v) < sellingPrice(lowest) ? v : lowest,
   );
+export function lowestAvailablePricedVariant(p: Product) {
+  const available = p.variants.filter((variant) => variant.stock > 0);
+  return lowestPricedVariant(
+    available.length ? { ...p, variants: available } : p,
+  );
+}
 export const minPrice = (p: Product) => sellingPrice(lowestPricedVariant(p));
 export function canSell(p: Product) {
   return (

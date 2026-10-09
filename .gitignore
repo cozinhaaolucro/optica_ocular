@@ -35,6 +35,7 @@ yarn-error.log*
 !.env.example
 /data/
 /backups/
+/videos oculos.rar
 
 # vercel
 .vercel

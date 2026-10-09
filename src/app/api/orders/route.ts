@@ -6,6 +6,7 @@ import {
   privateJson,
   readJson,
   sameOrigin,
+  secureCookie,
 } from "@/lib/http";
 export async function POST(request: Request) {
   try {
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     if (accessToken)
       (await cookies()).set(`ocular-order-${order.id}`, accessToken, {
         httpOnly: true,
-        secure: request.url.startsWith("https:"),
+        secure: secureCookie(request),
         sameSite: "lax",
         maxAge: 14 * 24 * 60 * 60,
         path: "/",

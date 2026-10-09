@@ -15,7 +15,13 @@ export function sameOrigin(request: Request) {
     throw new Error("Origem da solicitação inválida.");
 }
 export async function readJson(request: Request) {
-  if (!request.headers.get("content-type")?.startsWith("application/json"))
+  if (
+    request.headers
+      .get("content-type")
+      ?.split(";", 1)[0]
+      .trim()
+      .toLowerCase() !== "application/json"
+  )
     throw new Error("Envie os dados em JSON.");
   const reader = request.body?.getReader();
   if (!reader) throw new Error("Solicitação vazia.");
@@ -36,6 +42,11 @@ export async function readJson(request: Request) {
   } catch {
     throw new Error("Dados inválidos.");
   }
+}
+export function secureCookie(request: Request) {
+  return (
+    process.env.VERCEL === "1" || new URL(request.url).protocol === "https:"
+  );
 }
 export async function limited(request: Request, area: string, limit = 30) {
   const ip =

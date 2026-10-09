@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Product, Variant, Order } from "@/lib/types";
 import type { dashboard } from "@/lib/admin";
 import type { LensRow, LensEdit } from "@/lib/lens-management";
@@ -55,7 +55,7 @@ const money = (value: number) => formatCurrency(value / 100);
 const decimal = (value: number) => (value / 100).toFixed(2).replace(".", ",");
 const cents = (value: string) =>
   /^\d+(?:[.,]\d{1,2})?$/.test(value.trim())
-    ? Math.round(Number(value.replace(",", ".")) * 100)
+    ? Math.round(Number(value.trim().replace(",", ".")) * 100)
     : NaN;
 const slug = (value: string) =>
   normalizeSearch(value)
@@ -144,23 +144,24 @@ function Pager({
   onPage: (page: number) => void;
 }) {
   const pages = Math.max(1, Math.ceil(total / 20));
+  const currentPage = Math.min(page, pages);
   return (
     <div className="admin-pagination">
       <span>
-        {total} registros · página {page} de {pages}
+        {total} registros · página {currentPage} de {pages}
       </span>
       <div>
         <button
           type="button"
-          disabled={page <= 1}
-          onClick={() => onPage(page - 1)}
+          disabled={currentPage <= 1}
+          onClick={() => onPage(currentPage - 1)}
         >
           Anterior
         </button>
         <button
           type="button"
-          disabled={page >= pages}
-          onClick={() => onPage(page + 1)}
+          disabled={currentPage >= pages}
+          onClick={() => onPage(currentPage + 1)}
         >
           Próxima
         </button>
@@ -201,6 +202,7 @@ export default function AdminPanel() {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [showPassword, setShowPassword] = useState(false);
+  const working = useRef(false);
   const products = data?.products || [],
     orders = data?.orders || [];
   const brands = Array.from(new Set(products.map((p) => p.brand))).sort();
@@ -221,6 +223,7 @@ export default function AdminPanel() {
       setInventory(null);
       setLensEdits({});
       setLensData(null);
+      setTab("overview");
     }
   }, []);
   const refresh = useCallback(async () => {
@@ -273,6 +276,8 @@ export default function AdminPanel() {
     setOrderBaseline("");
   }
   async function work(action: () => Promise<void>) {
+    if (working.current) return;
+    working.current = true;
     setBusy(true);
     setError("");
     setMessage("");
@@ -281,6 +286,7 @@ export default function AdminPanel() {
     } catch (e) {
       fail(e);
     } finally {
+      working.current = false;
       setBusy(false);
     }
   }
@@ -311,6 +317,18 @@ export default function AdminPanel() {
       await refresh();
     });
   }
+  async function signOut() {
+    if (!canLeave()) return;
+    await work(async () => {
+      await api("/api/admin/session", { method: "DELETE" });
+      clearEditor();
+      setLensData(null);
+      setChecked([]);
+      setTab("overview");
+      setAuth(false);
+      setData(null);
+    });
+  }
   function edit(product: Product) {
     if (busy || !canLeave()) return;
     const next = structuredClone(product);
@@ -321,7 +339,7 @@ export default function AdminPanel() {
     setError("");
   }
   function create(copy?: Product) {
-    if (!canLeave()) return;
+    if (busy || !canLeave()) return;
     const id = `modelo-${crypto.randomUUID()}`;
     const p: Product = copy
       ? {
@@ -332,6 +350,7 @@ export default function AdminPanel() {
           revision: 0,
           published: false,
           verified: false,
+          priceConfirmed: false,
           variants: copy.variants.map((v, i) => ({
             ...v,
             id: `${id}-${i}`,
@@ -433,7 +452,7 @@ export default function AdminPanel() {
         canvas.height = Math.round((canvas.width * 3) / 4);
         const ctx = canvas.getContext("2d");
         if (!ctx) throw new Error("Não foi possível preparar a foto.");
-        ctx.fillStyle = "#f6f5f2";
+        ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         const width = Math.round(image.width * ratio);
         const height = Math.round(image.height * ratio);
@@ -465,13 +484,10 @@ export default function AdminPanel() {
         });
         setSelected((p) => {
           if (!p || p.id !== id) return p;
-          const images = Array.from(
-            { length: Math.max(3, p.images.length) },
-            (_, i) =>
-              p.images[i] ||
-              `/assets/placeholders/${["frontal", "lateral", "detalhe"][i % 3]}.svg`,
+          const images = p.images.filter(
+            (path) => path && !path.includes("/placeholders/"),
           );
-          images[index] = d.path;
+          images[Math.min(index, images.length)] = d.path;
           return { ...p, images };
         });
         setMessage("Foto enviada. Salve o cadastro para usá-la na vitrine.");
@@ -517,7 +533,7 @@ export default function AdminPanel() {
               ? p.variants.some(isOnPromotion)
               : filter === "pending"
                 ? productIssues(p).length > 0
-                : canSell(p))),
+                : productIssues(p).length === 0)),
   );
   const filteredOrders = orders.filter(
     (o) =>
@@ -549,7 +565,13 @@ export default function AdminPanel() {
       }, new Map<string, Order["customer"] & { orders: AdminOrder[] }>())
       .values(),
   ).filter((c) => matched(`${c.name} ${c.email} ${c.phone}`));
-  const view = <T,>(rows: T[]) => rows.slice((page - 1) * 20, page * 20);
+  const view = <T,>(rows: T[]) => {
+    const currentPage = Math.min(
+      page,
+      Math.max(1, Math.ceil(rows.length / 20)),
+    );
+    return rows.slice((currentPage - 1) * 20, currentPage * 20);
+  };
   const pendingOrders = orders.filter(
     (o) => !["completed", "cancelled"].includes(o.serviceStatus || "new"),
   );
@@ -570,6 +592,7 @@ export default function AdminPanel() {
     />
   );
   function openOrder(o: AdminOrder) {
+    if (busy || !canLeave()) return;
     setSelectedOrder(structuredClone(o));
     setOrderBaseline(JSON.stringify(o));
     setError("");
@@ -607,7 +630,13 @@ export default function AdminPanel() {
                 required
                 disabled={busy}
               />
-              <button type="button" onClick={() => setShowPassword((v) => !v)}>
+              <button
+                type="button"
+                disabled={busy}
+                aria-controls="admin-password"
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((v) => !v)}
+              >
                 {showPassword ? "Ocultar" : "Mostrar"}
               </button>
             </div>
@@ -632,6 +661,27 @@ export default function AdminPanel() {
         <p className="admin-login-caption">
           Painel exclusivo da equipe Ocular.
         </p>
+      </main>
+    );
+  if (!data)
+    return (
+      <main id="conteudo" className="admin-loading">
+        <p className="eyebrow">Óptica Ocular · equipe</p>
+        <h1>Não foi possível carregar o painel.</h1>
+        <p role="alert">{error}</p>
+        <div className="admin-form-actions">
+          <button
+            type="button"
+            className="button"
+            disabled={busy}
+            onClick={() => void work(refresh)}
+          >
+            Tentar novamente
+          </button>
+          <button type="button" disabled={busy} onClick={() => void signOut()}>
+            Sair da conta
+          </button>
+        </div>
       </main>
     );
   return (
@@ -670,19 +720,7 @@ export default function AdminPanel() {
           <Link href="/" target="_blank" rel="noopener noreferrer">
             Abrir a loja
           </Link>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => {
-              if (canLeave())
-                void work(async () => {
-                  await api("/api/admin/session", { method: "DELETE" });
-                  clearEditor();
-                  setAuth(false);
-                  setData(null);
-                });
-            }}
-          >
+          <button type="button" disabled={busy} onClick={() => void signOut()}>
             Sair da conta
           </button>
         </div>

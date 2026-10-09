@@ -139,7 +139,7 @@ test("seed is honest: placeholders, no confirmed stock or price", async () => {
     ),
   );
 });
-test("unpriced drafts stay private and cannot be validated or sold", async () => {
+test("unpriced models can be published for quotation without becoming a validated sale", async () => {
   const p = structuredClone((await getProducts())[0]);
   p.id = `draft-${randomUUID()}`;
   p.slug = p.id;
@@ -152,18 +152,24 @@ test("unpriced drafts stay private and cannot be validated or sold", async () =>
   assert.equal(saved.variants[0].priceCents, 0);
   assert(!(await getProducts()).some((item) => item.id === saved.id));
   assert.equal(canSell(saved), false);
-  await assert.rejects(() => saveProduct({ ...saved, published: true }));
   await assert.rejects(() => saveProduct({ ...saved, priceConfirmed: true }));
   await assert.rejects(() => saveProduct({ ...saved, verified: true }));
-  await assert.rejects(() =>
-    setPublished({
-      products: [{ id: saved.id, revision: saved.revision }],
-      published: true,
-    }),
-  );
   await assert.rejects(() => resolveLines(lines(saved)));
+  const [published] = await setPublished({
+    products: [{ id: saved.id, revision: saved.revision }],
+    published: true,
+  });
+  assert((await getProducts()).some((item) => item.id === published.id));
+  assert.equal(canSell(published), false);
+  assert.equal((await resolveLines(lines(published)))[0].priceCents, 0);
+  await assert.rejects(() => resolveLines(lines(published), true));
+  await assert.rejects(() => createOrder(input(published), true));
+  const quote = await createOrder(input(published));
+  assert.equal(quote.order.status, "quote_requested");
+  assert.equal(quote.order.totalCents, 0);
+  assert.equal(quote.order.reserved, false);
   const priced = await saveProduct({
-    ...saved,
+    ...published,
     published: true,
     variants: saved.variants.map((v) => ({ ...v, priceCents: 34990 })),
   });

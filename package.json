@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src tests scripts/setup-admin.mjs scripts/backup.mjs scripts/verify-http.mjs scripts/verify-preview.mjs scripts/verify-supabase.mts next.config.ts eslint.config.mjs --max-warnings 0",
-    "test": "node --conditions=react-server --import tsx --test tests/commerce.test.mts tests/catalog-preview.test.mts tests/postgres-schema.test.mts",
+    "test": "node --conditions=react-server --import tsx --test tests/commerce.test.mts tests/catalog-preview.test.mts tests/postgres-schema.test.mts tests/final-audit.test.mts",
     "test:supabase": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-supabase.mts",
     "test:http": "node scripts/verify-http.mjs",
     "test:preview": "node scripts/verify-preview.mjs",

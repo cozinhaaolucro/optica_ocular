@@ -26,6 +26,7 @@ export const metadata: Metadata = {
         url: "/assets/ensaio/grau-retrato-social.jpg",
         width: 1200,
         height: 630,
+        alt: "Óptica Ocular — óculos e lentes em Curitiba",
       },
     ],
   },

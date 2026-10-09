@@ -15,6 +15,7 @@ export default function CartPage() {
     clearCart,
     message,
   } = useCart();
+  const hasUnpricedItems = items.some((item) => item.priceCents <= 0);
   return (
     <main id="conteudo" className="store-page">
       <div className="store-page-heading">
@@ -76,10 +77,16 @@ export default function CartPage() {
                     <p className="store-muted">{item.variantLabel}</p>
                   )}
                   <p className="store-price">
-                    {formatCurrency(item.priceCents / 100)}
+                    {item.priceCents > 0
+                      ? formatCurrency(item.priceCents / 100)
+                      : "Consulte o valor"}
                   </p>
                   <p className="store-price-note">
-                    {item.available ? "Preço do item" : "Valor estimado"}
+                    {item.priceCents > 0
+                      ? item.available
+                        ? "Preço do item"
+                        : "Valor estimado"
+                      : ""}
                   </p>
                   <div
                     className="store-quantity"
@@ -125,7 +132,9 @@ export default function CartPage() {
                   </button>
                 </div>
                 <p className="store-price store-cart-line-total">
-                  {formatCurrency((item.priceCents * item.quantity) / 100)}
+                  {item.priceCents > 0
+                    ? formatCurrency((item.priceCents * item.quantity) / 100)
+                    : "Sob consulta"}
                 </p>
               </article>
             ))}
@@ -149,9 +158,15 @@ export default function CartPage() {
             <h2>Sua seleção</h2>
             <dl>
               <div>
-                <dt>Valor estimado</dt>
+                <dt>
+                  {hasUnpricedItems && totalCents > 0
+                    ? "Subtotal dos valores informados"
+                    : "Valor estimado"}
+                </dt>
                 <dd className="store-price">
-                  {formatCurrency(totalCents / 100)}
+                  {totalCents > 0
+                    ? formatCurrency(totalCents / 100)
+                    : "Sob consulta"}
                 </dd>
               </div>
               <div>
@@ -159,6 +174,12 @@ export default function CartPage() {
                 <dd>Na loja, a combinar</dd>
               </div>
             </dl>
+            {hasUnpricedItems && totalCents > 0 && (
+              <p>
+                Os itens sem valor informado serão incluídos no orçamento da
+                equipe.
+              </p>
+            )}
             <p>Envie sua seleção para receber um orçamento da loja.</p>
             <Link
               href="/checkout"

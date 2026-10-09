@@ -3,7 +3,7 @@ import type { Product } from "@/lib/types";
 import {
   availability,
   sellingPrice,
-  lowestPricedVariant,
+  lowestAvailablePricedVariant,
   isOnPromotion,
   productHref,
 } from "@/lib/product";
@@ -16,8 +16,13 @@ export default function ProductCard({
   product: Product;
   priority?: boolean;
 }) {
-  const variant = lowestPricedVariant(product);
+  const variant = lowestAvailablePricedVariant(product);
   const promotion = isOnPromotion(variant);
+  const price = sellingPrice(variant);
+  const available = product.variants.filter((v) => v.stock > 0);
+  const varies = (available.length ? available : product.variants).some(
+    (v) => sellingPrice(v) !== price,
+  );
   return (
     <article className="store-product-card">
       <Link
@@ -44,14 +49,27 @@ export default function ProductCard({
         )}
         <p className="store-price">
           {promotion && <span className="sr-only">Por </span>}
-          {formatCurrency(sellingPrice(variant) / 100)}
+          {price > 0 ? (
+            <>
+              {varies && (
+                <span className="store-price-prefix">A partir de </span>
+              )}
+              {formatCurrency(price / 100)}
+            </>
+          ) : (
+            "Consulte o valor"
+          )}
         </p>
         <p className="store-price-note">
-          {product.priceConfirmed
+          {price > 0 && product.priceConfirmed
             ? product.category === "grau"
               ? "Armação · lentes à parte"
               : "Óculos de sol"
-            : "Valor estimado"}
+            : price > 0
+              ? "Valor estimado"
+              : product.category === "grau"
+                ? "Armação · lentes à parte"
+                : "Óculos de sol"}
         </p>
         <p className="sr-only">{availability(product)}</p>
         <Link href={productHref(product)} className="store-card-link">

@@ -299,7 +299,9 @@
 .store-brand-logos img.is-ray-ban-logo {
   filter: grayscale(1);
   opacity: 0.75;
-  transition: filter 0.25s, opacity 0.2s;
+  transition:
+    filter 0.25s,
+    opacity 0.2s;
 }
 .store-brand-logos li:hover img.is-ray-ban-logo,
 .store-brand-logos li:focus-within img.is-ray-ban-logo {
@@ -362,9 +364,12 @@
   height: 100%;
   position: relative;
   overflow: hidden;
+  background: #fff;
 }
 .product-image-img {
   object-fit: contain;
+  object-position: center;
+  padding: 6%;
 }
 .store-card-copy {
   padding-top: 22px;
@@ -377,6 +382,13 @@
   font-size: 25px;
   font-weight: 500;
   margin-bottom: 14px;
+  overflow-wrap: anywhere;
+}
+.store-price-prefix {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-muted);
 }
 .store-card-copy .store-price {
   font-size: 19px;
@@ -678,6 +690,7 @@
 .store-product-copy h1 {
   font-size: clamp(42px, 4vw, 62px);
   line-height: 1.08;
+  overflow-wrap: anywhere;
 }
 .detail-price {
   font-size: 30px;
@@ -1192,6 +1205,10 @@ input[type="file"] {
 .store-lens-config > div:nth-child(2) {
   text-align: right;
 }
+.store-lens-config > div:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .store-lens-config .store-price {
   font-size: 18px;
 }
@@ -1542,6 +1559,18 @@ input[type="file"] {
   .store-header nav a {
     padding: 10px 0;
   }
+  .nav-dropdown-menu {
+    position: static;
+    border: 0;
+    box-shadow: none;
+    background: var(--color-surface-muted);
+  }
+  .store-header .nav-dropdown-menu a {
+    padding: 12px 16px;
+  }
+  .nav-dropdown-toggle {
+    font-size: 16px;
+  }
   .store-hero-photo {
     min-height: 540px;
   }
@@ -1706,6 +1735,13 @@ input[type="file"] {
   }
 }
 @media (max-width: 560px) {
+  .store-page input:not([type="range"], [type="checkbox"], [type="file"]),
+  .store-page select,
+  .store-page textarea,
+  .store-simulator-panel input,
+  .store-simulator-panel select {
+    font-size: 16px;
+  }
   .store-header {
     gap: 10px;
   }

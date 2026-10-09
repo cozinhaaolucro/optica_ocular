@@ -459,6 +459,15 @@
   font-size: 21px;
   margin-top: 32px;
 }
+.admin-reference-note {
+  padding: 14px 16px;
+  margin: 0 0 24px;
+  border-radius: 4px;
+  background: #f5f1e9;
+  color: #766344;
+  font-size: 12px;
+  line-height: 1.7;
+}
 .admin-shell .admin-fields {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
@@ -663,6 +672,10 @@
   font-size: 12px;
   box-shadow: 0 5px 20px #3024160d;
 }
+.admin-shell .admin-lens-validation {
+  color: #a03b2d;
+  max-width: 430px;
+}
 .admin-details > div {
   display: grid;
   grid-template-columns: 140px minmax(0, 1fr);
@@ -755,6 +768,16 @@
   border: 1px solid #d8d1c4;
   border-radius: 3px;
   overflow: hidden;
+}
+.admin-password-field:focus-within {
+  outline: 2px solid #775a43;
+  outline-offset: 3px;
+}
+.admin-password-field input:focus-visible {
+  outline: 0;
+}
+.admin-password-field button:focus-visible {
+  outline-offset: -4px;
 }
 .admin-password-field input {
   border: 0;
@@ -893,6 +916,12 @@
   .admin-filter-bar select {
     flex: 1;
     min-width: 130px;
+  }
+  .admin-shell input:not([type="checkbox"]),
+  .admin-shell select,
+  .admin-shell textarea,
+  .admin-login-page input {
+    font-size: 16px !important;
   }
   .admin-filter-bar .button {
     margin-left: 0;

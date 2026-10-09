@@ -19,12 +19,13 @@ export default function Checkout() {
   const [error, setError] = useState("");
   const attempt = useRef<{ fingerprint: string; key: string } | null>(null);
   const submitting = useRef(false);
+  const hasUnpricedItems = items.some((item) => item.priceCents <= 0);
   useEffect(() => {
     track("begin_checkout");
   }, []);
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting.current) return;
+    if (submitting.current || !ready || cartError || !lines.length) return;
     submitting.current = true;
     setBusy(true);
     setError("");
@@ -40,6 +41,7 @@ export default function Checkout() {
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
+        signal: AbortSignal.timeout(30000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: lines,
@@ -48,15 +50,25 @@ export default function Checkout() {
           privacyAccepted: f.get("privacy") === "on",
         }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
       if (!response.ok)
-        throw new Error(data.error || "Confira os dados e tente novamente.");
+        throw new Error(
+          data?.error ||
+            "Não foi possível enviar sua seleção. Tente novamente.",
+        );
+      if (!data?.order?.id)
+        throw new Error(
+          "Não foi possível confirmar sua solicitação. Tente novamente.",
+        );
       track("quote_requested");
       clearCart();
       router.push(`/pedido/${data.order.id}`);
     } catch (error) {
       setError(
-        error instanceof Error
+        error instanceof Error &&
+          error.name !== "TimeoutError" &&
+          error.name !== "AbortError" &&
+          !(error instanceof TypeError)
           ? error.message
           : "Não foi possível enviar. Tente novamente.",
       );
@@ -173,18 +185,32 @@ export default function Checkout() {
                   )}
                 </span>
                 <strong className="store-price">
-                  {formatCurrency((i.priceCents * i.quantity) / 100)}
+                  {i.priceCents > 0
+                    ? formatCurrency((i.priceCents * i.quantity) / 100)
+                    : "Sob consulta"}
                 </strong>
               </div>
             ))}
             <dl>
               <div>
-                <dt>Valor estimado</dt>
+                <dt>
+                  {hasUnpricedItems && totalCents > 0
+                    ? "Subtotal dos valores informados"
+                    : "Valor estimado"}
+                </dt>
                 <dd className="store-price">
-                  {formatCurrency(totalCents / 100)}
+                  {totalCents > 0
+                    ? formatCurrency(totalCents / 100)
+                    : "Sob consulta"}
                 </dd>
               </div>
             </dl>
+            {hasUnpricedItems && totalCents > 0 && (
+              <p>
+                Os itens sem valor informado serão incluídos no orçamento da
+                equipe.
+              </p>
+            )}
             <p>Lentes de grau são orçadas à parte.</p>
             <Link href="/carrinho" className="text-link">
               Editar minha seleção

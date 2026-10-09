@@ -2,6 +2,7 @@ import "server-only";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { query, execute, audit } from "./persistence";
+import { secureCookie } from "./http";
 const digest = (value: string) => createHash("sha256").update(value).digest();
 export class AdminAccessError extends Error {
   status = 401;
@@ -29,7 +30,7 @@ export async function adminAuthorized() {
 export async function requireAdmin() {
   if (!(await adminAuthorized())) throw new AdminAccessError();
 }
-export async function login() {
+export async function login(request: Request) {
   const token = randomBytes(32).toString("hex");
   await execute("DELETE FROM sessions WHERE expires<?", [Date.now()]);
   await execute("INSERT INTO sessions(token,expires) VALUES (?,?)", [
@@ -38,7 +39,7 @@ export async function login() {
   ]);
   (await cookies()).set("ocular-admin", token, {
     httpOnly: true,
-    secure: process.env.OCULAR_SITE_URL?.startsWith("https://"),
+    secure: secureCookie(request),
     sameSite: "strict",
     maxAge: 8 * 60 * 60,
     path: "/",

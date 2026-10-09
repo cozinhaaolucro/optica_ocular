@@ -12,7 +12,7 @@ export default function AddToCartButton({
   product: Product;
   variantId: string;
 }) {
-  const { addItem, ready } = useCart();
+  const { addItem, ready, error } = useCart();
   const [added, setAdded] = useState(false);
   const variant = product.variants.find((v) => v.id === variantId);
   const soldOut = canSell(product) && !variant?.stock;
@@ -20,7 +20,7 @@ export default function AddToCartButton({
     <div className="store-add">
       <button
         className="button"
-        disabled={!ready || soldOut}
+        disabled={!ready || !!error || !variant || soldOut}
         type="button"
         onClick={() => {
           if (addItem(product, variantId)) {
@@ -29,14 +29,21 @@ export default function AddToCartButton({
           }
         }}
       >
-        {soldOut
-          ? "Esgotado"
-          : added
-            ? "Adicionar mais um"
-            : canSell(product)
-              ? "Adicionar ao carrinho"
-              : "Adicionar à minha seleção"}
+        {!ready
+          ? "Preparando sua seleção…"
+          : soldOut
+            ? "Esgotado"
+            : added
+              ? "Adicionar mais um"
+              : canSell(product)
+                ? "Adicionar ao carrinho"
+                : "Adicionar à minha seleção"}
       </button>
+      {error && (
+        <p className="store-error" role="alert">
+          {error}
+        </p>
+      )}
       {added && (
         <p role="status" className="store-add-feedback">
           Adicionado. <Link href="/carrinho">Ver meu carrinho</Link>

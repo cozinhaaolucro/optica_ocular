@@ -1,7 +1,7 @@
 "use client";
 import { useSearchParams, usePathname } from "next/navigation";
 import type { Product } from "@/lib/types";
-import { minPrice } from "@/lib/product";
+import { lowestAvailablePricedVariant, sellingPrice } from "@/lib/product";
 import ProductFilters, { type Filters } from "./ProductFilters";
 import CategoryProducts from "./CategoryProducts";
 const normalize = (s: string) =>
@@ -9,6 +9,8 @@ const normalize = (s: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("pt-BR");
+const displayedPrice = (product: Product) =>
+  sellingPrice(lowestAvailablePricedVariant(product));
 export default function CategoryPageWrapper({
   products,
 }: {
@@ -18,12 +20,13 @@ export default function CategoryPageWrapper({
   const path = usePathname();
   const maxPrice = Math.max(
     10000,
-    Math.ceil(Math.max(...products.map(minPrice), 0) / 10000) * 10000,
+    Math.ceil(Math.max(...products.map(displayedPrice), 0) / 10000) * 10000,
   );
   const brands = [...new Set(products.map((p) => p.brand))].sort((a, b) =>
     a.localeCompare(b, "pt-BR"),
   );
   const rawPrice = Number(params.get("ate"));
+  const rawSort = params.get("ordem");
   const filters: Filters = {
     search: params.get("busca") || "",
     brands: params.getAll("marca").filter((b) => brands.includes(b)),
@@ -31,7 +34,11 @@ export default function CategoryPageWrapper({
       params.has("ate") && Number.isFinite(rawPrice)
         ? Math.max(0, Math.min(maxPrice, rawPrice))
         : maxPrice,
-    sort: params.get("ordem") || "featured",
+    sort:
+      rawSort &&
+      ["featured", "price-asc", "price-desc", "name"].includes(rawSort)
+        ? rawSort
+        : "featured",
   };
   function change(f: Filters) {
     const next = new URLSearchParams();
@@ -54,13 +61,13 @@ export default function CategoryPageWrapper({
             `${p.name} ${p.brand} ${p.description} ${p.tags.join(" ")}`,
           ).includes(search)) &&
         (!filters.brands.length || filters.brands.includes(p.brand)) &&
-        minPrice(p) <= filters.maxPrice,
+        displayedPrice(p) <= filters.maxPrice,
     )
     .sort((a, b) =>
       filters.sort === "price-asc"
-        ? minPrice(a) - minPrice(b)
+        ? displayedPrice(a) - displayedPrice(b)
         : filters.sort === "price-desc"
-          ? minPrice(b) - minPrice(a)
+          ? displayedPrice(b) - displayedPrice(a)
           : filters.sort === "name"
             ? a.name.localeCompare(b.name, "pt-BR")
             : 0,

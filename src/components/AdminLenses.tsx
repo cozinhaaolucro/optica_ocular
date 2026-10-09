@@ -40,6 +40,32 @@ export default function AdminLenses({
   const pages = Math.max(1, Math.ceil(rows.length / 20));
   const currentPage = Math.min(page, pages);
   const pending = Object.keys(edits).length;
+  function prices(row: LensRow) {
+    const draft = edits[row.id];
+    const promotion =
+      draft?.promotion ??
+      (row.promotionPriceCents === null
+        ? ""
+        : lensDecimal(row.promotionPriceCents));
+    const regular = lensCents(draft?.price ?? lensDecimal(row.priceCents));
+    const promotional = promotion.trim() ? lensCents(promotion) : null;
+    return {
+      promotion,
+      regular,
+      promotional,
+      valid:
+        Number.isFinite(regular) &&
+        regular > 0 &&
+        regular <= 10000000 &&
+        (promotional === null ||
+          (Number.isFinite(promotional) &&
+            promotional > 0 &&
+            promotional < regular)),
+    };
+  }
+  const invalidEdits = all.filter(
+    (row) => edits[row.id] && !prices(row).valid,
+  ).length;
   const brands = [...new Set(all.map((r) => r.brand))].sort();
   const categories = [
     ...new Set(
@@ -128,6 +154,14 @@ export default function AdminLenses({
     remove: "Encerrar promoções de",
     adjust: `Reajustar em ${percent}%`,
   }[action];
+  if (!data)
+    return (
+      <div className="admin-empty" role="status">
+        {busy
+          ? "Carregando a tabela de lentes…"
+          : "A tabela de lentes não foi carregada. Use Atualizar para tentar novamente."}
+      </div>
+    );
   return (
     <>
       <p className="admin-page-description">
@@ -200,7 +234,12 @@ export default function AdminLenses({
         <button
           type="button"
           onClick={exportRows}
-          disabled={!rows.length || busy}
+          disabled={!rows.length || busy || !!pending}
+          title={
+            pending
+              ? "Salve ou descarte as alterações antes de exportar."
+              : undefined
+          }
         >
           Exportar CSV
         </button>
@@ -332,22 +371,12 @@ export default function AdminLenses({
               const draft = edits[r.id];
               const label = `${r.line}, ${r.option}, ${r.treatment}, ${r.material} ${r.index}`;
               const active = draft?.enabled ?? r.enabled;
-              const promo =
-                draft?.promotion ??
-                (r.promotionPriceCents === null
-                  ? ""
-                  : lensDecimal(r.promotionPriceCents));
-              const regular = lensCents(
-                draft?.price ?? lensDecimal(r.priceCents),
-              );
-              const promotional = promo.trim() ? lensCents(promo) : null;
-              const valid =
-                Number.isFinite(regular) &&
-                regular > 0 &&
-                (promotional === null ||
-                  (Number.isFinite(promotional) &&
-                    promotional > 0 &&
-                    promotional < regular));
+              const {
+                promotion: promo,
+                regular,
+                promotional,
+                valid,
+              } = prices(r);
               return (
                 <tr
                   key={r.id}
@@ -442,7 +471,17 @@ export default function AdminLenses({
         </div>
       </div>
       <div className="admin-lens-save">
-        <span>{pending} configurações alteradas</span>
+        <div>
+          <span>{pending} configurações alteradas</span>
+          {invalidEdits > 0 && (
+            <small role="alert" className="admin-lens-validation">
+              Confira {invalidEdits}{" "}
+              {invalidEdits === 1 ? "configuração" : "configurações"}: o preço
+              deve ficar entre R$ 0,01 e R$ 100.000,00; a promoção, abaixo do
+              normal.
+            </small>
+          )}
+        </div>
         <div className="admin-form-actions">
           <button
             type="button"
@@ -454,7 +493,7 @@ export default function AdminLenses({
           <button
             type="button"
             className="button"
-            disabled={busy || !pending}
+            disabled={busy || !pending || invalidEdits > 0}
             onClick={() => void onSave()}
           >
             {busy ? "Salvando…" : "Salvar alterações"}

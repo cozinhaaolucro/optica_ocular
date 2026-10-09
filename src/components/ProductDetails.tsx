@@ -6,6 +6,7 @@ import {
   availability,
   sellingPrice,
   isOnPromotion,
+  canSell,
   whatsapp,
 } from "@/lib/product";
 import { formatCurrency } from "@/lib/currency";
@@ -14,10 +15,15 @@ import ProductImage from "./ProductImage";
 import AddToCartButton from "./AddToCartButton";
 export default function ProductDetails({ product }: { product: Product }) {
   const [photo, setPhoto] = useState(0);
-  const [variantId, setVariantId] = useState(product.variants[0].id);
-  const variant = product.variants.find((v) => v.id === variantId)!;
+  const [variantId, setVariantId] = useState(
+    (product.variants.find((v) => v.stock > 0) || product.variants[0]).id,
+  );
+  const variant =
+    product.variants.find((v) => v.id === variantId) || product.variants[0];
+  const price = sellingPrice(variant);
   const views = ["frontal", "lateral", "detalhe"] as const;
-  const count = Math.max(3, product.images.length);
+  const count = Math.max(1, product.images.length);
+  const selectedPhoto = Math.min(photo, count - 1);
   const hasMeasures = !!(variant.lensWidth && variant.bridge && variant.temple);
   const hasSpecs = !!(
     variant.color ||
@@ -33,11 +39,11 @@ export default function ProductDetails({ product }: { product: Product }) {
       <div className="store-gallery">
         <div className="store-gallery-main">
           <ProductImage
-            key={photo}
-            src={product.images[photo]}
-            alt={`${product.name}, foto ${photo + 1}`}
-            view={views[photo % 3]}
-            priority={photo === 0}
+            key={selectedPhoto}
+            src={product.images[selectedPhoto]}
+            alt={`${product.name}, foto ${selectedPhoto + 1}`}
+            view={views[selectedPhoto % 3]}
+            priority={selectedPhoto === 0}
             sizes="(max-width: 560px) 90vw, (max-width: 820px) 45vw, 50vw"
           />
         </div>
@@ -50,8 +56,8 @@ export default function ProductDetails({ product }: { product: Product }) {
             <button
               key={i}
               type="button"
-              aria-label={`Ver foto ${views[i % 3]}${i >= 3 ? " " + (i + 1) : ""}`}
-              aria-pressed={photo === i}
+              aria-label={`Ver foto ${i + 1} de ${product.name}`}
+              aria-pressed={selectedPhoto === i}
               onClick={() => setPhoto(i)}
             >
               <ProductImage
@@ -79,22 +85,30 @@ export default function ProductDetails({ product }: { product: Product }) {
           )}
           <p className="store-price detail-price">
             {isOnPromotion(variant) && <span className="sr-only">Por </span>}
-            {formatCurrency(sellingPrice(variant) / 100)}
+            {price > 0 ? formatCurrency(price / 100) : "Consulte o valor"}
           </p>
           <p className="store-price-note">
-            {product.priceConfirmed
+            {price > 0 && product.priceConfirmed
               ? product.category === "grau"
                 ? "Preço da armação. Lentes de grau à parte."
                 : "Preço do óculos de sol."
-              : product.category === "grau"
-                ? "Valor estimado · lentes à parte"
-                : "Valor estimado"}
+              : price <= 0
+                ? product.category === "grau"
+                  ? "Lentes de grau à parte."
+                  : ""
+                : product.category === "grau"
+                  ? "Valor estimado · lentes à parte"
+                  : "Valor estimado"}
           </p>
         </div>
         <p
           className={`store-availability ${product.verified ? "is-verified" : ""}`}
         >
-          {availability(product)}
+          {canSell(product)
+            ? variant.stock > 0
+              ? "Disponível"
+              : "Esgotado nesta opção"
+            : availability(product)}
         </p>
         {product.verified && product.description && (
           <p>{product.description}</p>
@@ -104,13 +118,13 @@ export default function ProductDetails({ product }: { product: Product }) {
             <label htmlFor="product-variant">Cor e tamanho</label>
             <select
               id="product-variant"
-              value={variantId}
+              value={variant.id}
               onChange={(e) => setVariantId(e.target.value)}
             >
               {product.variants.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.label}
-                  {product.verified && !v.stock ? " · Esgotado" : ""}
+                  {canSell(product) && !v.stock ? " · Esgotado" : ""}
                 </option>
               ))}
             </select>
@@ -152,14 +166,14 @@ export default function ProductDetails({ product }: { product: Product }) {
           </p>
         )}
         <AddToCartButton
-          key={variantId}
+          key={variant.id}
           product={product}
-          variantId={variantId}
+          variantId={variant.id}
         />
         <a
           className="store-secondary-link"
           href={whatsapp(
-            `Olá! Tenho interesse no modelo ${product.name}. Podem me ajudar com esse modelo?`,
+            `Olá! Tenho interesse no modelo ${product.name}, opção ${variant.label}. Podem me ajudar com esse modelo?`,
           )}
           target="_blank"
           rel="noopener noreferrer"

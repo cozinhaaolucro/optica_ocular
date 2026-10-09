@@ -22,6 +22,10 @@ export default function AdminProductEditor({
   onClose: () => void;
 }) {
   const [tagText, setTagText] = useState(selected.tags.join(", "));
+  const photos = selected.images.filter(
+    (image) => image && !image.includes("/placeholders/"),
+  );
+  const estimated = selected.tags.includes("referencia-estimada");
   return (
     <form
       className="admin-editor"
@@ -36,6 +40,12 @@ export default function AdminProductEditor({
           Voltar ao catálogo
         </button>
       </div>
+      {estimated && (
+        <p className="admin-reference-note">
+          Referência estimada a partir do vídeo. Confira o código na haste e a
+          cor da peça antes de validar esta ficha.
+        </p>
+      )}
       <div className="admin-fields">
         <div className="store-field">
           <label htmlFor="p-name">Nome</label>
@@ -78,6 +88,7 @@ export default function AdminProductEditor({
           <label htmlFor="p-material">Material</label>
           <input
             id="p-material"
+            maxLength={120}
             value={selected.material}
             onChange={(e) => update({ material: e.target.value })}
           />
@@ -143,34 +154,41 @@ export default function AdminProductEditor({
       </datalist>
       <h3>Fotografias do modelo · 4:3</h3>
       <p className="store-muted">
-        JPG, PNG ou WebP. Recomendado: 1600 × 1200 px. Fundo neutro, produto
-        inteiro e margens consistentes.
+        JPG, PNG ou WebP. Recomendado: 1600 × 1200 px. Fundo branco, produto
+        inteiro e centralizado. Prefira a vista frontal como foto principal.{" "}
+        {photos.length}{" "}
+        {photos.length === 1 ? "foto cadastrada" : "fotos cadastradas"}.
       </p>
       <div className="admin-photo-slots">
         {(["frontal", "lateral", "detalhe"] as const).map((view, i) => (
           <div key={view}>
             <div className="admin-photo">
               <ProductImage
-                src={selected.images[i]}
-                alt={`${selected.name}, ${view}`}
+                src={photos[i]}
+                alt={`${selected.name}, foto ${i + 1}`}
                 view={view}
               />
             </div>
-            <label htmlFor={`photo-${i}`}>Foto {view}</label>
+            <label htmlFor={`photo-${i}`}>
+              {i === 0 ? "Principal" : `Outra vista ${i}`}
+            </label>
             <input
               id={`photo-${i}`}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               disabled={busy}
-              onChange={(e) => upload(e.target.files?.[0], i)}
+              onChange={(e) => {
+                void upload(e.target.files?.[0], i);
+                e.target.value = "";
+              }}
             />
             <div className="admin-photo-actions">
               <button
                 type="button"
-                disabled={busy || !selected.images[i]}
+                disabled={busy || !photos[i]}
                 onClick={() => {
-                  const images = [...selected.images];
-                  images[i] = `/assets/placeholders/${view}.svg`;
+                  const images = [...photos];
+                  images.splice(i, 1);
                   update({ images });
                 }}
               >
@@ -179,14 +197,9 @@ export default function AdminProductEditor({
               {i > 0 && (
                 <button
                   type="button"
-                  disabled={busy || !selected.images[i]}
+                  disabled={busy || !photos[i]}
                   onClick={() => {
-                    const images = Array.from(
-                      { length: Math.max(3, selected.images.length) },
-                      (_, n) =>
-                        selected.images[n] ||
-                        `/assets/placeholders/${["frontal", "lateral", "detalhe"][n % 3]}.svg`,
-                    );
+                    const images = [...photos];
                     [images[0], images[i]] = [images[i], images[0]];
                     update({ images });
                   }}
@@ -212,6 +225,8 @@ export default function AdminProductEditor({
                 <label htmlFor={`${v.id}-${key}`}>{label}</label>
                 <input
                   id={`${v.id}-${key}`}
+                  required={key === "label"}
+                  maxLength={key === "label" ? 120 : 80}
                   value={v[key as "label" | "sku" | "color"]}
                   onChange={(e) => variant(i, { [key]: e.target.value })}
                 />
@@ -276,7 +291,9 @@ export default function AdminProductEditor({
                 id={`${v.id}-stock`}
                 type="number"
                 min="0"
+                max="100000"
                 step="1"
+                required
                 value={v.stock}
                 onChange={(e) => variant(i, { stock: Number(e.target.value) })}
               />
@@ -321,6 +338,7 @@ export default function AdminProductEditor({
       <button
         type="button"
         className="store-clear-link"
+        disabled={busy || selected.variants.length >= 40}
         onClick={() =>
           update({
             variants: [
@@ -339,6 +357,9 @@ export default function AdminProductEditor({
       >
         + Adicionar variante
       </button>
+      {selected.variants.length >= 40 && (
+        <p className="store-muted">Limite de 40 variantes por modelo.</p>
+      )}
       <div className="admin-validation">
         {[
           ["published", "Exibir no catálogo"],

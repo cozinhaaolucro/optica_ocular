@@ -109,7 +109,7 @@ export async function setPublished(input: unknown) {
             .strict(),
         )
         .min(1)
-        .max(100),
+        .max(250),
       published: z.boolean(),
     })
     .strict()

@@ -1,14 +1,23 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProducts } from "@/lib/catalog";
-import { canSell, minPrice, productHref } from "@/lib/product";
+import {
+  canSell,
+  lowestAvailablePricedVariant,
+  productHref,
+  sellingPrice,
+} from "@/lib/product";
 import { siteUrl } from "@/lib/config";
 import ProductDetails from "@/components/ProductDetails";
 import ProductCard from "@/components/ProductCard";
 export const dynamic = "force-dynamic";
+const getPageProducts = cache(getProducts);
 const find = async (category: string, slug: string) =>
-  (await getProducts()).find((p) => p.category === category && p.slug === slug);
+  (await getPageProducts()).find(
+    (p) => p.category === category && p.slug === slug,
+  );
 export async function generateMetadata({
   params,
 }: {
@@ -25,9 +34,15 @@ export async function generateMetadata({
     description,
     alternates: { canonical: productHref(p) },
     openGraph: {
+      type: "website",
+      locale: "pt_BR",
+      siteName: "Óptica Ocular",
+      url: productHref(p),
       title: p.name,
       description,
-      images: p.images.length ? p.images : undefined,
+      images: p.images
+        .filter((image) => !image.includes("/placeholders/"))
+        .map((url) => ({ url, alt: p.name })),
     },
   };
 }
@@ -39,25 +54,28 @@ export default async function ProductPage({
   const { categoria, slug } = await params;
   const p = await find(categoria, slug);
   if (!p) notFound();
-  const related = (await getProducts())
+  const related = (await getPageProducts())
     .filter((x) => x.category === p.category && x.id !== p.id)
     .slice(0, 3);
+  const offeredVariant = lowestAvailablePricedVariant(p);
+  const images = p.images.filter((image) => !image.includes("/placeholders/"));
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: p.name,
     ...(p.verified ? { description: p.description } : {}),
     brand: { "@type": "Brand", name: p.brand },
-    ...(p.images.length ? { image: p.images.map((i) => siteUrl() + i) } : {}),
+    ...(images.length ? { image: images.map((i) => siteUrl() + i) } : {}),
     ...(canSell(p)
       ? {
           offers: {
             "@type": "Offer",
-            price: (minPrice(p) / 100).toFixed(2),
+            price: (sellingPrice(offeredVariant) / 100).toFixed(2),
             priceCurrency: "BRL",
-            availability: p.variants.some((v) => v.stock > 0)
-              ? "https://schema.org/InStock"
-              : "https://schema.org/OutOfStock",
+            availability:
+              offeredVariant.stock > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
             url: siteUrl() + productHref(p),
           },
         }
@@ -65,16 +83,16 @@ export default async function ProductPage({
   };
   return (
     <main id="conteudo" className="store-page">
-      <div className="store-breadcrumb" aria-label="Caminho da página">
+      <nav className="store-breadcrumb" aria-label="Caminho da página">
         <Link href="/">Início</Link>
         <span>/</span>
         <Link href={`/produtos/${p.category}`}>
           {p.category === "grau" ? "Óculos de grau" : "Óculos de sol"}
         </Link>
         <span>/</span>
-        <span>{p.name}</span>
-      </div>
-      <ProductDetails product={p} />
+        <span aria-current="page">{p.name}</span>
+      </nav>
+      <ProductDetails key={p.id} product={p} />
       <section className="store-related">
         <div className="store-section-top">
           <h2>

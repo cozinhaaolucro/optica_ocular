@@ -54,6 +54,11 @@ const materialNames: Record<string, string> = {
   POLI: "Policarbonato",
 };
 const materialLabel = (value: string) => materialNames[value] || value;
+const normalizeSearch = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR");
 export default function LensSimulator({
   standalone = false,
 }: {
@@ -95,9 +100,15 @@ export default function LensSimulator({
     setLoading(true);
     setError("");
     try {
-      const r = await fetch("/api/lenses", { cache: "no-store" });
+      const r = await fetch("/api/lenses", {
+        cache: "no-store",
+        signal: AbortSignal.timeout(20000),
+      });
       if (!r.ok) throw new Error();
-      setData(await r.json());
+      const options = await r.json();
+      if (!options || typeof options !== "object" || Array.isArray(options))
+        throw new Error();
+      setData(options);
       go(1);
     } catch {
       setError("Não foi possível carregar as opções. Tente novamente.");
@@ -148,6 +159,9 @@ export default function LensSimulator({
   const brands = data
     ? Object.keys(data).filter((b) => Object.keys(data[b]).some(matches))
     : [];
+  const matchingProducts = products.filter((p) =>
+    normalizeSearch(p.name).includes(normalizeSearch(query.trim())),
+  );
   const titles = [
     "Compare lentes e preços.",
     "Como você usa sua visão?",
@@ -195,7 +209,7 @@ export default function LensSimulator({
         <h3 ref={heading} tabIndex={-1}>
           {titles[step]}
         </h3>
-        <div ref={body} className="store-simulator-body">
+        <div ref={body} className="store-simulator-body" aria-busy={loading}>
           {step > 1 && (
             <p className="store-sim-breadcrumb">
               {[group.title, step > 2 ? brand : "", step > 3 ? product : ""]
@@ -296,53 +310,46 @@ export default function LensSimulator({
                 onChange={(e) => setQuery(e.target.value)}
               />
               <div className="store-lens-results">
-                {products
-                  .filter((p) =>
-                    p.name.toLowerCase().includes(query.toLowerCase()),
-                  )
-                  .map((p) => (
-                    <button
-                      key={`${p.cat}-${p.name}`}
-                      className="store-lens-product"
-                      type="button"
-                      onClick={() => {
-                        setProduct(p.name);
-                        setCategory(p.cat);
-                        go(4);
-                      }}
-                    >
-                      <span>
-                        <strong>{p.name}</strong>
-                        <small>{p.cat}</small>
-                      </span>
-                      <span>
-                        <small>A partir de</small>
+                {matchingProducts.map((p) => (
+                  <button
+                    key={`${p.cat}-${p.name}`}
+                    className="store-lens-product"
+                    type="button"
+                    onClick={() => {
+                      setProduct(p.name);
+                      setCategory(p.cat);
+                      go(4);
+                    }}
+                  >
+                    <span>
+                      <strong>{p.name}</strong>
+                      <small>{p.cat}</small>
+                    </span>
+                    <span>
+                      <small>A partir de</small>
+                      {p.regularPrice !== undefined && (
+                        <span className="store-price-was">
+                          <span className="sr-only">De </span>
+                          <del>{formatCurrency(p.regularPrice)}</del>
+                        </span>
+                      )}
+                      <strong className="store-price">
                         {p.regularPrice !== undefined && (
-                          <span className="store-price-was">
-                            <span className="sr-only">De </span>
-                            <del>{formatCurrency(p.regularPrice)}</del>
-                          </span>
+                          <span className="sr-only">Por </span>
                         )}
-                        <strong className="store-price">
-                          {p.regularPrice !== undefined && (
-                            <span className="sr-only">Por </span>
-                          )}
-                          {formatCurrency(p.min)}
-                        </strong>
-                      </span>
-                    </button>
-                  ))}
+                        {formatCurrency(p.min)}
+                      </strong>
+                    </span>
+                  </button>
+                ))}
                 {!products.length && (
                   <p>Os valores desta marca são informados pelo atendimento.</p>
                 )}
-                {products.length > 0 &&
-                  !products.some((p) =>
-                    p.name.toLowerCase().includes(query.toLowerCase()),
-                  ) && (
-                    <p role="status">
-                      Nenhuma linha encontrada. Tente outro nome.
-                    </p>
-                  )}
+                {products.length > 0 && !matchingProducts.length && (
+                  <p role="status">
+                    Nenhuma linha encontrada. Tente outro nome.
+                  </p>
+                )}
               </div>
             </>
           )}

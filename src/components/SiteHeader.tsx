@@ -170,16 +170,6 @@ export default function SiteHeader() {
                   key={link.label}
                   ref={dropdown}
                   className="nav-dropdown"
-                  onPointerEnter={(event) => {
-                    if (event.pointerType === "mouse") setDropdownOpen(true);
-                  }}
-                  onPointerLeave={(event) => {
-                    if (
-                      event.pointerType === "mouse" &&
-                      !event.currentTarget.contains(document.activeElement)
-                    )
-                      setDropdownOpen(false);
-                  }}
                   onBlur={(event) => {
                     if (
                       !event.currentTarget.contains(

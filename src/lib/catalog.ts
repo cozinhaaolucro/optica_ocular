@@ -88,13 +88,14 @@ export const productSchema = z
   })
   .strict()
   .superRefine((p, ctx) => {
-    if (p.published || p.priceConfirmed || p.verified) {
+    if (p.priceConfirmed || p.verified) {
       p.variants.forEach((v, index) => {
         if (v.priceCents <= 0)
           ctx.addIssue({
             code: "custom",
             path: ["variants", index, "priceCents"],
-            message: "Informe o preço antes de exibir ou validar o produto.",
+            message:
+              "Informe o preço antes de confirmar os valores ou validar o produto.",
           });
       });
     }

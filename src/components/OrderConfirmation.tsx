@@ -12,17 +12,37 @@ export default function OrderConfirmation({ id }: { id: string }) {
   const [error, setError] = useState("");
   useEffect(() => {
     const c = new AbortController();
-    fetch(`/api/orders/${id}`, { signal: c.signal })
+    let active = true;
+    const timeout = setTimeout(() => c.abort(), 20000);
+    fetch(`/api/orders/${id}`, {
+      signal: c.signal,
+    })
       .then(async (r) => {
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error);
+        const d = await r.json().catch(() => null);
+        if (!r.ok || !d?.order)
+          throw new Error(
+            d?.error ||
+              "Não foi possível localizar sua solicitação. Recarregue a página ou fale com a loja.",
+          );
         return d;
       })
-      .then((d) => setOrder(d.order))
+      .then((d) => {
+        if (active) setOrder(d.order);
+      })
       .catch((e) => {
-        if (e.name !== "AbortError") setError(e.message);
-      });
-    return () => c.abort();
+        if (active)
+          setError(
+            e.name === "AbortError" || e instanceof TypeError
+              ? "Não foi possível carregar sua solicitação. Recarregue a página ou fale com a loja."
+              : e.message,
+          );
+      })
+      .finally(() => clearTimeout(timeout));
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+      c.abort();
+    };
   }, [id]);
   return (
     <main id="conteudo" className="store-page store-confirmation">
@@ -69,7 +89,9 @@ export default function OrderConfirmation({ id }: { id: string }) {
                   )}
                 </span>
                 <span className="store-price">
-                  {formatCurrency((i.priceCents * i.quantity) / 100)}
+                  {i.priceCents > 0
+                    ? formatCurrency((i.priceCents * i.quantity) / 100)
+                    : "Sob consulta"}
                 </span>
               </div>
             ))}

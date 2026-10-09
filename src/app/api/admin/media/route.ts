@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       await image
         .resize(1600, 1200, {
           fit: "contain",
-          background: "#f6f5f2",
+          background: "#ffffff",
           withoutEnlargement: true,
         })
         .webp({ quality: 88 })

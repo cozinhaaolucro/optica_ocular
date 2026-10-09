@@ -125,13 +125,22 @@ function cartItems(): CartItem[] {
   });
 }
 function addItem(product: Product, variantId: string) {
-  const variant = product.variants.find((v) => v.id === variantId);
-  if (!variant) return false;
+  const current = snapshot.products.find((p) => p.id === product.id);
+  const variant = current?.variants.find((v) => v.id === variantId);
+  if (!snapshot.ready || snapshot.error || !current || !variant) {
+    snapshot = {
+      ...snapshot,
+      message:
+        "Não foi possível adicionar este modelo. Atualize a página e tente novamente.",
+    };
+    emit();
+    return false;
+  }
   const prev = snapshot.lines.find(
     (l) => l.productId === product.id && l.variantId === variantId,
   );
   const quantity = (prev?.quantity || 0) + 1;
-  const max = canSell(product) ? Math.min(10, variant.stock) : 10;
+  const max = canSell(current) ? Math.min(10, variant.stock) : 10;
   if (quantity > max || (!prev && snapshot.lines.length >= 30)) {
     snapshot = {
       ...snapshot,
@@ -205,17 +214,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/catalog", { signal: controller.signal })
+    let active = true;
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    fetch("/api/catalog", {
+      signal: controller.signal,
+    })
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json();
       })
       .then((data) => {
-        snapshot = { ...snapshot, products: data.products, ready: true };
+        if (!active) return;
+        if (!Array.isArray(data.products)) throw new Error();
+        snapshot = {
+          ...snapshot,
+          products: data.products,
+          ready: true,
+          error: null,
+        };
         emit();
       })
-      .catch((error) => {
-        if (error.name !== "AbortError") {
+      .catch(() => {
+        if (active) {
           snapshot = {
             ...snapshot,
             ready: true,
@@ -224,9 +244,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
           };
           emit();
         }
-      });
+      })
+      .finally(() => clearTimeout(timeout));
     window.addEventListener("storage", applyStorage);
     return () => {
+      active = false;
+      clearTimeout(timeout);
       controller.abort();
       window.removeEventListener("storage", applyStorage);
     };
@@ -241,7 +264,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         ready: state?.ready || false,
         error:
           state?.error ||
-          (items.some((item) => !item.slug)
+          (state?.ready && !state.error && items.some((item) => !item.slug)
             ? "Remova os modelos indisponíveis para continuar."
             : null),
         message: state?.message || "",

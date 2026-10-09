@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         { error: "Senha inválida ou acesso ainda não configurado." },
         401,
       );
-    await login();
+    await login(request);
     return privateJson({ authenticated: true });
   } catch (e) {
     return apiError(e);

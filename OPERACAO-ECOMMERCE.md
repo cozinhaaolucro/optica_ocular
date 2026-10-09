@@ -34,6 +34,8 @@ No painel, abra um modelo ou escolha “Cadastrar modelo”. Preencha nome, marc
 
 O cadastro tem três estados separados: exibir no catálogo, preço confirmado e ficha conferida. Validar exige três fotos diferentes sem placeholder, material e variantes completas. Estoque zero de um modelo validado aparece como esgotado. Um orçamento pode continuar sendo usado para confirmar modelos ainda pendentes. Dados antigos abertos no painel não sobrescrevem um produto alterado por outra atualização: reabra para atualizar a revisão.
 
+Modelos sem preço podem aparecer para consulta e solicitação de orçamento, com o valor exibido como “Consulte o valor”. A publicação não confirma preço, disponibilidade ou conferência da ficha. A venda direta continua exigindo cadastro validado, preço positivo confirmado e estoque da variante.
+
 Fotos: frontal, lateral e detalhe, proporção **4:3**, recomendado **1600 × 1200 px**; fundo neutro, iluminação uniforme, produto completo e margens constantes. JPG, PNG ou WebP, até 8 MB, mínimo 600 × 450 px. O upload valida a imagem, remove metadados ao recodificar e prepara WebP no quadro 4:3. A posição é preservada mesmo enviando o detalhe antes da frontal. Uma imagem só entra na vitrine depois de salvar o cadastro. SVG não é aceito no upload.
 
 Os placeholders em `public/assets/placeholders/` seguem esse formato. A fotografia editorial de categoria/home é uma imagem de marca, e não é apresentada como fotografia de um SKU. Revise também marcas, descrições e os preços herdados do catálogo antes de confirmá-los.
