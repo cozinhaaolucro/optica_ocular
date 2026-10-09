@@ -18,6 +18,7 @@ export default function CategoryPageWrapper({
 }) {
   const params = useSearchParams();
   const path = usePathname();
+  const hasPrices = products.some((product) => displayedPrice(product) > 0);
   const maxPrice = Math.max(
     10000,
     Math.ceil(Math.max(...products.map(displayedPrice), 0) / 10000) * 10000,
@@ -31,12 +32,15 @@ export default function CategoryPageWrapper({
     search: params.get("busca") || "",
     brands: params.getAll("marca").filter((b) => brands.includes(b)),
     maxPrice:
-      params.has("ate") && Number.isFinite(rawPrice)
+      hasPrices && params.has("ate") && Number.isFinite(rawPrice)
         ? Math.max(0, Math.min(maxPrice, rawPrice))
         : maxPrice,
     sort:
       rawSort &&
-      ["featured", "price-asc", "price-desc", "name"].includes(rawSort)
+      (hasPrices
+        ? ["featured", "price-asc", "price-desc", "name"]
+        : ["featured", "name"]
+      ).includes(rawSort)
         ? rawSort
         : "featured",
   };
@@ -78,6 +82,7 @@ export default function CategoryPageWrapper({
     <div className="store-catalog-layout">
       <ProductFilters
         brands={brands}
+        showPrices={hasPrices}
         maxPrice={maxPrice}
         filters={filters}
         onChange={change}

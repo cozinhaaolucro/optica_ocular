@@ -10,11 +10,13 @@ export interface Filters {
 export default function ProductFilters({
   brands,
   maxPrice,
+  showPrices = true,
   filters,
   onChange,
 }: {
   brands: string[];
   maxPrice: number;
+  showPrices?: boolean;
   filters: Filters;
   onChange: (next: Filters) => void;
 }) {
@@ -67,24 +69,28 @@ export default function ProductFilters({
             ))}
           </div>
         </fieldset>
-        <label htmlFor="product-max-price">
-          Preço até{" "}
-          <strong className="monetary-value">
-            {formatCurrency(filters.maxPrice / 100)}
-          </strong>
-        </label>
-        <input
-          type="range"
-          id="product-max-price"
-          min={0}
-          max={maxPrice}
-          step={100}
-          value={filters.maxPrice}
-          aria-valuetext={formatCurrency(filters.maxPrice / 100)}
-          onChange={(e) =>
-            onChange({ ...filters, maxPrice: Number(e.target.value) })
-          }
-        />
+        {showPrices && (
+          <>
+            <label htmlFor="product-max-price">
+              Preço até{" "}
+              <strong className="monetary-value">
+                {formatCurrency(filters.maxPrice / 100)}
+              </strong>
+            </label>
+            <input
+              type="range"
+              id="product-max-price"
+              min={0}
+              max={maxPrice}
+              step={100}
+              value={filters.maxPrice}
+              aria-valuetext={formatCurrency(filters.maxPrice / 100)}
+              onChange={(e) =>
+                onChange({ ...filters, maxPrice: Number(e.target.value) })
+              }
+            />
+          </>
+        )}
         <label htmlFor="product-sort">Ordenar por</label>
         <select
           id="product-sort"
@@ -92,8 +98,12 @@ export default function ProductFilters({
           onChange={(e) => onChange({ ...filters, sort: e.target.value })}
         >
           <option value="featured">Nossa seleção</option>
-          <option value="price-asc">Menor preço</option>
-          <option value="price-desc">Maior preço</option>
+          {showPrices && (
+            <>
+              <option value="price-asc">Menor preço</option>
+              <option value="price-desc">Maior preço</option>
+            </>
+          )}
           <option value="name">Nome: A–Z</option>
         </select>
         <button

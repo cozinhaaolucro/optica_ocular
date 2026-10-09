@@ -58,7 +58,7 @@ Os testes de gravação usaram bancos temporários. A conferência do Supabase r
 
 Ao término desta auditoria, a lapidação estava pronta no projeto local. A conferência do domínio documenta a versão que estava publicada naquele momento. Na etapa seguinte, o responsável autorizou a publicação dos 50 modelos para consulta e orçamento e o deploy das correções. A ativação tem backup e transação em `scripts/publish-video-catalog.mts`; os registros da execução ficam em `data/final-audit-20261009/`.
 
-Para liberar os 50 rascunhos como produtos reais, continuam necessárias a conferência física de modelo/cor/medidas, a definição dos preços e saldos e as fotos que faltam em 15 galerias. O admin conserva essas referências para revisão sem apresentá-las como estoque validado.
+Os 50 modelos foram publicados posteriormente para consulta e orçamento, por autorização do responsável. Para concluir a validação comercial, continuam necessárias a conferência física de modelo/cor/medidas, a definição dos preços e saldos e as fotos que faltam em 15 galerias. O admin conserva essas referências para revisão sem apresentá-las como estoque validado.
 
 Pagamento online e frete permanecem para a etapa posterior à validação do cliente, conforme combinado. O orçamento e a retirada na loja estão disponíveis no fluxo atual.
 
