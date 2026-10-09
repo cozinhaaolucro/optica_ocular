@@ -108,6 +108,30 @@ export default function AdminProductEditor({
       </div>
       <div className="admin-fields">
         <div className="store-field">
+          <label htmlFor="p-description-source">Origem da descrição</label>
+          <select
+            id="p-description-source"
+            value={
+              selected.descriptionSource ??
+              (selected.tags.includes("videos-20261008")
+                ? "generated"
+                : "original")
+            }
+            onChange={(e) =>
+              update({
+                descriptionSource: e.target
+                  .value as Product["descriptionSource"],
+              })
+            }
+          >
+            <option value="original">Texto próprio ou do fabricante</option>
+            <option value="generated">Texto assistido por IA</option>
+          </select>
+          <small>
+            Usada na exportação para o Google; não aparece na vitrine.
+          </small>
+        </div>
+        <div className="store-field">
           <label htmlFor="p-slug">Endereço do modelo</label>
           <input
             id="p-slug"
@@ -189,7 +213,12 @@ export default function AdminProductEditor({
                 onClick={() => {
                   const images = [...photos];
                   images.splice(i, 1);
-                  update({ images });
+                  update({
+                    images,
+                    variants: selected.variants.map((v) =>
+                      v.image === photos[i] ? { ...v, image: "" } : v,
+                    ),
+                  });
                 }}
               >
                 Remover
@@ -233,6 +262,60 @@ export default function AdminProductEditor({
               </div>
             ))}
             <div className="store-field">
+              <label htmlFor={`${v.id}-gtin`}>
+                Código de barras (GTIN / EAN)
+              </label>
+              <input
+                id={`${v.id}-gtin`}
+                inputMode="numeric"
+                maxLength={14}
+                value={v.gtin || ""}
+                onChange={(e) =>
+                  variant(i, { gtin: e.target.value.replace(/\s/g, "") })
+                }
+                aria-describedby={`${v.id}-gtin-help`}
+              />
+              <small id={`${v.id}-gtin-help`}>
+                Use o código da etiqueta, inclusive os zeros iniciais.
+              </small>
+            </div>
+            <div className="store-field">
+              <label htmlFor={`${v.id}-image`}>Foto desta variante</label>
+              <select
+                id={`${v.id}-image`}
+                value={v.image || ""}
+                onChange={(e) => variant(i, { image: e.target.value })}
+                aria-describedby={`${v.id}-image-help`}
+              >
+                <option value="">Usar a foto principal</option>
+                {photos.map((path, index) => (
+                  <option key={path} value={path}>
+                    Foto {index + 1}
+                    {index === 0 ? " · principal" : ""}
+                  </option>
+                ))}
+              </select>
+              <small id={`${v.id}-image-help`}>
+                Com cores diferentes, associe a foto de cada opção.
+              </small>
+            </div>
+            <div className="store-field">
+              <label htmlFor={`${v.id}-mpn`}>
+                Referência do fabricante (MPN)
+              </label>
+              <input
+                id={`${v.id}-mpn`}
+                maxLength={70}
+                value={v.mpn || ""}
+                onChange={(e) => variant(i, { mpn: e.target.value })}
+                aria-describedby={`${v.id}-mpn-help`}
+              />
+              <small id={`${v.id}-mpn-help`}>
+                Código completo do modelo e da cor. Informe o GTIN sempre que
+                houver.
+              </small>
+            </div>
+            <div className="store-field">
               <label htmlFor={`${v.id}-price`}>Preço normal (R$)</label>
               <input
                 id={`${v.id}-price`}
@@ -240,11 +323,7 @@ export default function AdminProductEditor({
                 min="0.01"
                 max="100000"
                 step="0.01"
-                required={
-                  selected.published ||
-                  selected.priceConfirmed ||
-                  selected.verified
-                }
+                required={selected.priceConfirmed || selected.verified}
                 value={v.priceCents > 0 ? v.priceCents / 100 : ""}
                 placeholder="A preencher"
                 onChange={(e) =>
@@ -347,6 +426,9 @@ export default function AdminProductEditor({
                 ...selected.variants[0],
                 id: `${selected.id}-${Date.now()}`,
                 sku: "",
+                gtin: "",
+                mpn: "",
+                image: "",
                 label: "Nova variante",
                 promotionPriceCents: null,
                 stock: 0,

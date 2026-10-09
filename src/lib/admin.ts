@@ -6,6 +6,7 @@ import { canSell } from "./product";
 import { listOrders, adminOrder } from "./orders";
 import { storageConfigured } from "./media";
 import { usesPostgres } from "./storage-mode";
+import { channelReport } from "./marketing-feeds";
 
 export async function dashboard() {
   const products = await getProducts(true);
@@ -26,6 +27,11 @@ export async function dashboard() {
       ...event,
       body: JSON.parse(event.body),
     })),
+    channels: channelReport(products, {
+      siteUrl: process.env.OCULAR_SITE_URL || "http://localhost:3000",
+      paymentsEnabled: false,
+      indexingEnabled: process.env.OCULAR_INDEXING_ENABLED === "true",
+    }),
     config: {
       database: usesPostgres() ? "Supabase · PostgreSQL" : "SQLite local",
       media: usesPostgres()

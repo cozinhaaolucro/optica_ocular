@@ -13,7 +13,8 @@ delete process.env.OCULAR_CATALOG_PREVIEW;
 
 const { db } = await import("../src/lib/db");
 const { execute } = await import("../src/lib/persistence");
-const { getProduct, getProducts } = await import("../src/lib/catalog");
+const { getProduct, getProducts, saveProduct, productSchema } =
+  await import("../src/lib/catalog");
 const { setPublished } = await import("../src/lib/admin");
 const { readJson, secureCookie } = await import("../src/lib/http");
 const { lowestAvailablePricedVariant, sellingPrice } =
@@ -145,4 +146,36 @@ test("available offer pricing excludes sold-out variants and includes active pro
     variants: product.variants.map((item) => ({ ...item, stock: 0 })),
   };
   assert.equal(lowestAvailablePricedVariant(soldOut).id, "sold-out");
+});
+
+test("manufacturer identifiers validate checksum and reject reused GTINs atomically", async () => {
+  const template = (await getProducts())[0];
+  const create = (id: string) => ({
+    ...structuredClone(template),
+    id,
+    slug: id,
+    revision: 0,
+    published: false,
+    verified: false,
+    priceConfirmed: false,
+    variants: [
+      {
+        ...template.variants[0],
+        id: `${id}-variant`,
+        sku: id,
+        gtin: "4006381333931",
+        mpn: "TEST-001",
+      },
+    ],
+  });
+  const first = await saveProduct(create("barcode-first"));
+  await assert.rejects(
+    () => saveProduct(create("barcode-second")),
+    /código de barras único/,
+  );
+  assert.equal(await getProduct("barcode-second"), undefined);
+  const invalid = structuredClone(first);
+  invalid.variants[0].gtin = "4006381333932";
+  assert(!productSchema.safeParse(invalid).success);
+  assert.equal((await getProduct(first.id))?.revision, first.revision);
 });

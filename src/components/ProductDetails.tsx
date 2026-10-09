@@ -8,15 +8,30 @@ import {
   isOnPromotion,
   canSell,
   whatsapp,
+  selectVariant,
+  variantImage,
 } from "@/lib/product";
 import { formatCurrency } from "@/lib/currency";
 import { track } from "@/lib/analytics";
 import ProductImage from "./ProductImage";
 import AddToCartButton from "./AddToCartButton";
-export default function ProductDetails({ product }: { product: Product }) {
-  const [photo, setPhoto] = useState(0);
+export default function ProductDetails({
+  product,
+  initialVariantId,
+}: {
+  product: Product;
+  initialVariantId?: string;
+}) {
+  const [photo, setPhoto] = useState(
+    Math.max(
+      0,
+      product.images.indexOf(
+        variantImage(product, selectVariant(product, initialVariantId)),
+      ),
+    ),
+  );
   const [variantId, setVariantId] = useState(
-    (product.variants.find((v) => v.stock > 0) || product.variants[0]).id,
+    selectVariant(product, initialVariantId).id,
   );
   const variant =
     product.variants.find((v) => v.id === variantId) || product.variants[0];
@@ -118,7 +133,16 @@ export default function ProductDetails({ product }: { product: Product }) {
             <select
               id="product-variant"
               value={variant.id}
-              onChange={(e) => setVariantId(e.target.value)}
+              onChange={(e) => {
+                const next = selectVariant(product, e.target.value);
+                setVariantId(next.id);
+                setPhoto(
+                  Math.max(
+                    0,
+                    product.images.indexOf(variantImage(product, next)),
+                  ),
+                );
+              }}
             >
               {product.variants.map((v) => (
                 <option key={v.id} value={v.id}>

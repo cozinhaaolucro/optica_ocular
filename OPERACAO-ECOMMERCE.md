@@ -40,7 +40,9 @@ Fotos: frontal, lateral e detalhe, proporção **4:3**, recomendado **1600 × 12
 
 Os placeholders em `public/assets/placeholders/` seguem esse formato. A fotografia editorial de categoria/home é uma imagem de marca, e não é apresentada como fotografia de um SKU. Revise também marcas, descrições e os preços herdados do catálogo antes de confirmá-los.
 
-A vitrine não exibe avisos de preparação nem campos vazios. Descrições de rascunho aparecem no produto somente depois de a ficha ser conferida; preços ainda não confirmados são apresentados como estimativas. A faixa de marcas usa originais em `public/assets/brands/` e versões sem margens brancas em `public/assets/brands/strip/`.
+A vitrine não exibe avisos de preparação nem campos vazios. Descrições dos modelos publicados aparecem na ficha, incluindo os modelos para consulta; preços positivos ainda não confirmados são apresentados como estimativas. A faixa de marcas usa originais em `public/assets/brands/` e versões sem margens brancas em `public/assets/brands/strip/`.
+
+**Canais de venda** prepara a importação do catálogo no Google e na Meta por XML público. Somente variantes com cadastro e preço confirmados são exportadas; produtos sob consulta ficam fora dos feeds. O Google também aguarda compra online e indexação. Consulte [CANAIS-DE-VENDA.md](CANAIS-DE-VENDA.md) para URLs, critérios e configuração das contas.
 
 O simulador usa a tabela existente em `public/assets/lentes-data.json`, com os preços administrados em **Lentes** no painel. As alterações ficam em `settings` e entram em `/api/lenses` sem cache; não é preciso republicar para mudar preços. É possível editar um valor ou aplicar percentual a até 1.000 resultados filtrados por lote. A revisão impede sobrescrever uma atualização simultânea. A interface filtra uso, marca, linha, material, tratamento e cor/tecnologia; cada consulta leva a configuração específica. Não recebe receita nem decide compatibilidade clínica. Novas linhas ou combinações técnicas exigem atualização da fonte de dados.
 

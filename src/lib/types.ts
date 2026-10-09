@@ -1,6 +1,9 @@
 export interface Variant {
   id: string;
   sku: string;
+  gtin?: string;
+  mpn?: string;
+  image?: string;
   label: string;
   color: string;
   lensWidth: number | null;
@@ -18,6 +21,7 @@ export interface Product {
   category: "grau" | "sol";
   brand: string;
   description: string;
+  descriptionSource?: "original" | "generated";
   material: string;
   features: string[];
   tags: string[];

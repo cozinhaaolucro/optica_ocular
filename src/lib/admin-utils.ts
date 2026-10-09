@@ -1,4 +1,5 @@
 import type { Product } from "./types";
+import { hasVariantPhotos } from "./product";
 export function productIssues(p: Product) {
   const issues: string[] = [];
   if (
@@ -21,6 +22,7 @@ export function productIssues(p: Product) {
   )
     issues.push("SKU, cor e medidas das variantes");
   if (!p.verified) issues.push("Conferência da ficha");
+  if (!hasVariantPhotos(p)) issues.push("Fotografia de cada cor");
   return issues;
 }
 export const serviceLabels = {

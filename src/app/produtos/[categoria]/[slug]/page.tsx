@@ -5,10 +5,12 @@ import { notFound } from "next/navigation";
 import { getProducts } from "@/lib/catalog";
 import {
   canSell,
-  lowestAvailablePricedVariant,
+  selectVariant,
   productHref,
   sellingPrice,
+  variantImage,
 } from "@/lib/product";
+import { catalogImageUrl, isRealCatalogImage } from "@/lib/marketing-feeds";
 import { siteUrl } from "@/lib/config";
 import ProductDetails from "@/components/ProductDetails";
 import ProductCard from "@/components/ProductCard";
@@ -20,8 +22,10 @@ const find = async (category: string, slug: string) =>
   );
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ categoria: string; slug: string }>;
+  searchParams: Promise<{ variant?: string | string[] }>;
 }): Promise<Metadata> {
   const { categoria, slug } = await params;
   const p = await find(categoria, slug);
@@ -29,6 +33,12 @@ export async function generateMetadata({
   const description =
     p.description ||
     `Conheça ${p.name} e solicite um orçamento na Óptica Ocular, em Curitiba.`;
+  const query = await searchParams;
+  const variant = selectVariant(
+    p,
+    typeof query.variant === "string" ? query.variant : undefined,
+  );
+  const mainIndex = p.images.indexOf(variantImage(p, variant));
   return {
     title: p.name,
     description,
@@ -41,15 +51,25 @@ export async function generateMetadata({
       title: p.name,
       description,
       images: p.images
-        .filter((image) => !image.includes("/placeholders/"))
-        .map((url) => ({ url, alt: p.name })),
+        .map((image, index) => ({ image, index }))
+        .filter(({ image }) => isRealCatalogImage(image))
+        .sort(
+          (a, b) =>
+            Number(b.index === mainIndex) - Number(a.index === mainIndex),
+        )
+        .map(({ index }) => ({
+          url: catalogImageUrl(siteUrl(), p, index),
+          alt: p.name,
+        })),
     },
   };
 }
 export default async function ProductPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ categoria: string; slug: string }>;
+  searchParams: Promise<{ variant?: string | string[] }>;
 }) {
   const { categoria, slug } = await params;
   const p = await find(categoria, slug);
@@ -57,15 +77,32 @@ export default async function ProductPage({
   const related = (await getPageProducts())
     .filter((x) => x.category === p.category && x.id !== p.id)
     .slice(0, 3);
-  const offeredVariant = lowestAvailablePricedVariant(p);
-  const images = p.images.filter((image) => !image.includes("/placeholders/"));
+  const query = await searchParams;
+  const offeredVariant = selectVariant(
+    p,
+    typeof query.variant === "string" ? query.variant : undefined,
+  );
+  const mainIndex = p.images.indexOf(variantImage(p, offeredVariant));
+  const images = p.images
+    .map((image, index) => ({ image, index }))
+    .filter(({ image }) => isRealCatalogImage(image))
+    .sort(
+      (a, b) => Number(b.index === mainIndex) - Number(a.index === mainIndex),
+    )
+    .map(({ index }) => catalogImageUrl(siteUrl(), p, index));
+  const offerLink = new URL(productHref(p), siteUrl());
+  offerLink.searchParams.set("variant", offeredVariant.id);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: p.name,
     ...(p.description ? { description: p.description } : {}),
     brand: { "@type": "Brand", name: p.brand },
-    ...(images.length ? { image: images.map((i) => siteUrl() + i) } : {}),
+    ...(offeredVariant.gtin
+      ? { [`gtin${offeredVariant.gtin.length}`]: offeredVariant.gtin }
+      : {}),
+    ...(offeredVariant.mpn ? { mpn: offeredVariant.mpn } : {}),
+    ...(images.length ? { image: images } : {}),
     ...(canSell(p)
       ? {
           offers: {
@@ -76,7 +113,7 @@ export default async function ProductPage({
               offeredVariant.stock > 0
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
-            url: siteUrl() + productHref(p),
+            url: offerLink.href,
           },
         }
       : {}),
@@ -92,7 +129,11 @@ export default async function ProductPage({
         <span>/</span>
         <span aria-current="page">{p.name}</span>
       </nav>
-      <ProductDetails key={p.id} product={p} />
+      <ProductDetails
+        key={`${p.id}-${offeredVariant.id}`}
+        product={p}
+        initialVariantId={offeredVariant.id}
+      />
       <section className="store-related">
         <div className="store-section-top">
           <h2>

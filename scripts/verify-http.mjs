@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -98,6 +99,7 @@ try {
     idempotencyKey: randomUUID(),
   };
   let order;
+  let uploadedImage;
   await check("origem e campos manipulados rejeitados", async () => {
     assert.equal(
       (await req("/api/orders", body, "POST", false, "https://foreign.example"))
@@ -204,6 +206,7 @@ try {
       const r = await req("/api/admin/media", form, "POST", true);
       assert.equal(r.status, 201);
       const { path } = await r.json();
+      uploadedImage = path;
       const image = await req(path);
       assert.equal(image.status, 200);
       const m = await sharp(Buffer.from(await image.arrayBuffer())).metadata();
@@ -276,6 +279,179 @@ try {
       204,
     );
   });
+  await check(
+    "feeds públicos não exportam exemplos; links e preparo ficam no admin",
+    async () => {
+      for (const name of ["google", "meta"]) {
+        const response = await req(`/feeds/${name}.xml`);
+        assert.equal(response.status, 200);
+        assert(
+          response.headers.get("content-type").includes("application/xml"),
+        );
+        assert.equal(response.headers.get("cache-control"), "no-store");
+        assert.equal(response.headers.get("x-catalog-items"), "0");
+        const xml = await response.text();
+        assert(xml.startsWith('<?xml version="1.0"'));
+        assert(!xml.includes("<item>"));
+      }
+      const d = await (
+        await req("/api/admin/dashboard", null, "GET", true)
+      ).json();
+      assert.equal(d.channels.publishedProducts, 33);
+      assert(
+        d.channels.models.every((p) =>
+          p.variants.every((v) => v.metaIssues.length > 0),
+        ),
+      );
+    },
+  );
+  await check(
+    "imagens de anúncios usam JPEG quadrado e recusam arquivos ocultos ou antigos",
+    async () => {
+      const current = await (
+        await req("/api/admin/products", null, "GET", true)
+      ).json();
+      const original = current.products.find((product) => product.id === p.id);
+      const save = await req(
+        "/api/admin/products",
+        { ...original, images: [uploadedImage] },
+        "PUT",
+        true,
+      );
+      assert.equal(save.status, 200);
+      const fingerprint = createHash("sha256")
+        .update(uploadedImage)
+        .digest("hex")
+        .slice(0, 12);
+      const imagePath = `/feeds/images/${p.id}-0-${fingerprint}.jpg`;
+      const image = await req(imagePath);
+      assert.equal(image.status, 200);
+      assert.equal(image.headers.get("content-type"), "image/jpeg");
+      const metadata = await sharp(
+        Buffer.from(await image.arrayBuffer()),
+      ).metadata();
+      assert.equal(metadata.width, 1200);
+      assert.equal(metadata.height, 1200);
+      assert.equal(
+        (await req(`/feeds/images/${p.id}-0-000000000000.jpg`)).status,
+        404,
+      );
+      const saved = (await save.json()).product;
+      assert.equal(
+        (
+          await req(
+            "/api/admin/products",
+            { ...saved, published: false },
+            "PUT",
+            true,
+          )
+        ).status,
+        200,
+      );
+      assert.equal((await req(imagePath)).status, 404);
+      const latest = await (
+        await req("/api/admin/products", null, "GET", true)
+      ).json();
+      const restored = await req(
+        "/api/admin/products",
+        {
+          ...latest.products.find((product) => product.id === p.id),
+          images: original.images,
+          published: original.published,
+        },
+        "PUT",
+        true,
+      );
+      assert.equal(restored.status, 200);
+      p.revision = (await restored.json()).product.revision;
+    },
+  );
+  await check(
+    "link da variante mantém preço, disponibilidade e fotografia corretos",
+    async () => {
+      const original = (
+        await (await req("/api/admin/products", null, "GET", true)).json()
+      ).products.find((product) => product.id === p.id);
+      const other = `${p.id}-qa-second`;
+      const pictures = [
+        uploadedImage,
+        "/assets/ensaio/grau-retrato-1122.webp",
+        "/assets/ensaio/sol-retrato-1122.webp",
+      ];
+      const options = [
+        {
+          ...original.variants[0],
+          id: original.variants[0].id,
+          sku: `${p.id}-qa-1`,
+          gtin: "4006381333931",
+          mpn: "QA-1",
+          color: "Preto",
+          label: "Preto",
+          image: pictures[0],
+          lensWidth: 50,
+          bridge: 18,
+          temple: 140,
+          priceCents: 70000,
+          stock: 3,
+        },
+        {
+          ...original.variants[0],
+          id: other,
+          sku: `${p.id}-qa-2`,
+          gtin: "",
+          mpn: "QA-2",
+          color: "Havana",
+          label: "Havana",
+          image: pictures[1],
+          lensWidth: 52,
+          bridge: 18,
+          temple: 140,
+          priceCents: 90000,
+          stock: 0,
+        },
+      ];
+      const save = await req(
+        "/api/admin/products",
+        {
+          ...original,
+          images: pictures,
+          variants: options,
+          material: "Acetato",
+          verified: true,
+          priceConfirmed: true,
+        },
+        "PUT",
+        true,
+      );
+      assert.equal(save.status, 200);
+      const html = await (
+        await req(`/produtos/${p.category}/${p.slug}?variant=${other}`)
+      ).text();
+      const json = JSON.parse(
+        html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)[1],
+      );
+      assert.equal(json.offers.price, "900.00");
+      assert.equal(json.offers.availability, "https://schema.org/OutOfStock");
+      assert.equal(new URL(json.offers.url).searchParams.get("variant"), other);
+      assert(html.includes(`value="${other}" selected`));
+      const fingerprint = createHash("sha256")
+        .update(pictures[1])
+        .digest("hex")
+        .slice(0, 12);
+      assert(json.image[0].endsWith(`${p.id}-1-${fingerprint}.jpg`));
+      const image = await req(`/feeds/images/${p.id}-1-${fingerprint}.jpg`);
+      assert.equal(image.status, 200);
+      const saved = (await save.json()).product;
+      const restore = await req(
+        "/api/admin/products",
+        { ...original, revision: saved.revision },
+        "PUT",
+        true,
+      );
+      assert.equal(restore.status, 200);
+      p.revision = (await restore.json()).product.revision;
+    },
+  );
   await check(
     "dashboard privado e alterações sem sessão bloqueadas",
     async () => {
@@ -483,7 +659,9 @@ try {
       );
       assert.equal(quoted.status, 201);
       const quoteId = (await quoted.json()).order.id;
-      const quote = (await (await req(`/api/orders/${quoteId}`, null, "GET", true)).json()).order;
+      const quote = (
+        await (await req(`/api/orders/${quoteId}`, null, "GET", true)).json()
+      ).order;
       assert.equal(quote.items[0].priceCents, 99900);
       assert.equal(quote.totalCents, 199800);
       product.variants[0].promotionPriceCents = null;

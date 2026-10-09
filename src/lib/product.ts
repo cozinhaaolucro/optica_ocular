@@ -34,6 +34,20 @@ export function lowestAvailablePricedVariant(p: Product) {
     available.length ? { ...p, variants: available } : p,
   );
 }
+export function selectVariant(p: Product, id?: string) {
+  return p.variants.find((v) => v.id === id) || lowestAvailablePricedVariant(p);
+}
+export function variantImage(p: Product, v: Variant) {
+  return v.image && p.images.includes(v.image) ? v.image : p.images[0] || "";
+}
+export function hasVariantPhotos(p: Product) {
+  const colors = new Set(p.variants.map((v) => v.color.trim().toLowerCase()));
+  return p.variants.every(
+    (v) =>
+      (!v.image || p.images.includes(v.image)) &&
+      (colors.size <= 1 || !!v.image),
+  );
+}
 export const minPrice = (p: Product) => sellingPrice(lowestPricedVariant(p));
 export function canSell(p: Product) {
   return (
@@ -45,6 +59,7 @@ export function canSell(p: Product) {
     p.images.every((i) => !i.includes("/placeholders/")) &&
     p.material.trim().length > 0 &&
     p.variants.length > 0 &&
+    hasVariantPhotos(p) &&
     p.variants.every(
       (v) =>
         v.sku.trim() &&

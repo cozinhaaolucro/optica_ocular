@@ -22,6 +22,7 @@ import {
 } from "@/lib/admin-utils";
 import AdminProductEditor from "./AdminProductEditor";
 import AdminLenses from "./AdminLenses";
+import AdminChannels from "./AdminChannels";
 import ProductImage from "./ProductImage";
 
 type Dashboard = Awaited<ReturnType<typeof dashboard>>;
@@ -33,6 +34,7 @@ type Tab =
   | "orders"
   | "customers"
   | "lenses"
+  | "channels"
   | "activity"
   | "settings";
 const tabs: [Tab, string][] = [
@@ -42,6 +44,7 @@ const tabs: [Tab, string][] = [
   ["orders", "Atendimentos"],
   ["customers", "Clientes"],
   ["lenses", "Lentes"],
+  ["channels", "Canais de venda"],
   ["activity", "Histórico"],
   ["settings", "Operação"],
 ];
@@ -80,12 +83,16 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
       name: "nome (3 a 150 caracteres)",
       brand: "marca",
       description: "descrição (10 a 4.000 caracteres)",
+      descriptionSource: "origem da descrição",
       slug: "endereço do modelo",
       material: "material",
       images: "fotografias",
+      image: "fotografia da variante",
       features: "características",
       tags: "palavras-chave",
       sku: "SKU",
+      gtin: "código de barras (GTIN / EAN)",
+      mpn: "referência do fabricante (até 70 caracteres)",
       label: "nome da variante",
       color: "cor",
       lensWidth: "largura da lente",
@@ -355,6 +362,8 @@ export default function AdminPanel() {
             ...v,
             id: `${id}-${i}`,
             sku: "",
+            gtin: "",
+            mpn: "",
             stock: 0,
             promotionPriceCents: null,
           })),
@@ -487,8 +496,15 @@ export default function AdminPanel() {
           const images = p.images.filter(
             (path) => path && !path.includes("/placeholders/"),
           );
+          const previous = images[Math.min(index, images.length)];
           images[Math.min(index, images.length)] = d.path;
-          return { ...p, images };
+          return {
+            ...p,
+            images,
+            variants: p.variants.map((v) =>
+              v.image && v.image === previous ? { ...v, image: d.path } : v,
+            ),
+          };
         });
         setMessage("Foto enviada. Salve o cadastro para usá-la na vitrine.");
       } finally {
@@ -1807,6 +1823,16 @@ export default function AdminPanel() {
               )}
             </div>
           </>
+        )}
+        {tab === "channels" && (
+          <AdminChannels
+            report={data.channels}
+            busy={busy}
+            onEdit={(id) => {
+              const product = products.find((p) => p.id === id);
+              if (product) void navigate("products").then(() => edit(product));
+            }}
+          />
         )}
         {tab === "settings" && (
           <>

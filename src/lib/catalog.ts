@@ -1,10 +1,11 @@
 import "server-only";
 import { z } from "zod";
 import { query, execute, audit, transaction } from "./persistence";
-import { canSell, sellingPrice } from "./product";
+import { canSell, sellingPrice, variantImage } from "./product";
 import { referenceProducts } from "./catalog-seed";
 import { isCatalogPreview } from "./storage-mode";
 import type { Product, CartLine, CartItem } from "./types";
+import { validGtin } from "./product-identifiers";
 
 export async function getProducts(includeDrafts = false): Promise<Product[]> {
   if (isCatalogPreview())
@@ -37,6 +38,7 @@ export const productSchema = z
     category: z.enum(["grau", "sol"]),
     brand: z.string().trim().min(1).max(80),
     description: z.string().trim().min(10).max(4000),
+    descriptionSource: z.enum(["original", "generated"]).optional(),
     material: z.string().trim().max(120),
     features: z.array(z.string().max(200)).max(20),
     tags: z.array(z.string().max(50)).max(20),
@@ -50,6 +52,16 @@ export const productSchema = z
           .object({
             id: z.string().regex(/^[a-zA-Z0-9-]{3,120}$/),
             sku: z.string().trim().max(80),
+            gtin: z
+              .string()
+              .trim()
+              .refine(
+                (v) => !v || validGtin(v),
+                "Confira o código de barras e o dígito verificador.",
+              )
+              .optional(),
+            mpn: z.string().trim().max(70).optional(),
+            image: localImage.or(z.literal("")).optional(),
             label: z.string().trim().min(1).max(120),
             color: z.string().trim().max(80),
             lensWidth: dimension,
@@ -88,6 +100,14 @@ export const productSchema = z
   })
   .strict()
   .superRefine((p, ctx) => {
+    p.variants.forEach((v, index) => {
+      if (v.image && !p.images.includes(v.image))
+        ctx.addIssue({
+          code: "custom",
+          path: ["variants", index, "image"],
+          message: "Escolha uma fotografia cadastrada neste modelo.",
+        });
+    });
     if (p.priceConfirmed || p.verified) {
       p.variants.forEach((v, index) => {
         if (v.priceCents <= 0)
@@ -143,9 +163,19 @@ async function saveProductInTransaction(input: unknown) {
     )
   )
     throw new Error("Cada variante deve ter um SKU único.");
+  const gtins = p.variants.map((v) => v.gtin || "").filter(Boolean);
+  if (
+    new Set(gtins).size !== gtins.length ||
+    products.some(
+      (other) =>
+        other.id !== p.id &&
+        other.variants.some((v) => v.gtin && gtins.includes(v.gtin)),
+    )
+  )
+    throw new Error("Cada variante deve ter um código de barras único.");
   if (p.verified && !canSell({ ...p, published: true }))
     throw new Error(
-      "Complete fotos, material, SKU, cor, medidas e preço confirmado para validar o produto.",
+      "Complete fotos do modelo e das cores, material, SKU, cor, medidas e preço confirmado para validar o produto.",
     );
   if (
     products.some(
@@ -202,7 +232,7 @@ export async function resolveLines(
       category: p.category,
       variantLabel: v.label,
       priceCents: sellingPrice(v),
-      image: p.images[0] || "",
+      image: variantImage(p, v),
       available: canSell(p) && v.stock >= line.quantity,
     });
   }

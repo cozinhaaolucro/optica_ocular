@@ -10,7 +10,7 @@ Preencha nome, marca, coleção, material, descrição e variantes. Cada variant
 
 **Exibir no catálogo**, **Preço confirmado** e **Ficha conferida** são controles separados. A ficha só pode ser conferida depois de completar os dados. Selecione modelos na lista para exibir ou ocultar vários de uma vez. Ocultar preserva o cadastro e seu histórico.
 
-É possível salvar um rascunho oculto com o preço em branco. A lista mostra **Sem preço** e as exportações deixam o valor vazio. Antes de exibir ou validar o cadastro, preencha um preço positivo em todas as variantes. Para encontrar o primeiro lote extraído dos vídeos, busque a tag **videos-20261008** e selecione **Ocultos**; confira as peças com o [plano da primeira leva](PRIMEIRA-LEVA-PRODUTOS.md).
+É possível salvar um modelo com o preço em branco e exibi-lo para consulta. A lista mostra **Sem preço** e as exportações deixam o valor vazio. Antes de confirmar preço ou conferir a ficha, preencha um preço positivo em todas as variantes. Para encontrar os 50 modelos publicados da primeira leva, busque a tag **videos-20261008**; confira as peças com o [plano da primeira leva](PRIMEIRA-LEVA-PRODUTOS.md).
 
 Salve antes de sair da ficha. Se outra pessoa atualizar o mesmo modelo, o painel pede que você atualize os dados antes de salvar novamente.
 
@@ -37,6 +37,10 @@ Para mudar uma marca ou linha inteira, filtre primeiro e use **Ações nos resul
 O desconto percentual usa o preço normal e substitui promoções do filtro. Não ativa configurações ocultas. O simulador mostra o valor normal riscado e o promocional por par; marcas, linhas e opções sem configurações ativas desaparecem da seleção. Os dados são renovados ao iniciar uma simulação. Para encerrar uma oferta individual, deixe **Promocional** vazio. O painel impede promoções iguais ou superiores ao preço normal e preserva o lote inteiro se houver conflito ou valor inválido.
 
 As linhas e combinações técnicas continuam seguindo a tabela do projeto; novos produtos de lentes exigem atualização dessa fonte.
+
+## Canais de venda
+
+Copie os links do Google Merchant Center e da Meta Commerce Manager para importar o catálogo por URL. A tela mostra as variantes exportadas, os bloqueios de cada canal e os campos a conferir por modelo. **Revisar cadastro** abre a ficha correspondente. Complete preços, fotos, variantes e os códigos reais do fabricante antes de confirmar o cadastro. Para modelos com cores diferentes, associe uma foto a cada variante. Veja o [guia dos canais](CANAIS-DE-VENDA.md) para conectar as contas e acompanhar a aprovação.
 
 ## Histórico e operação
 
