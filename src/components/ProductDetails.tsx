@@ -28,6 +28,7 @@ export default function ProductDetails({ product }: { product: Product }) {
   const hasSpecs = !!(
     variant.color ||
     product.material ||
+    product.features.length ||
     hasMeasures ||
     variant.sku
   );
@@ -110,9 +111,7 @@ export default function ProductDetails({ product }: { product: Product }) {
               : "Esgotado nesta opção"
             : availability(product)}
         </p>
-        {product.verified && product.description && (
-          <p>{product.description}</p>
-        )}
+        {product.description && <p>{product.description}</p>}
         {product.variants.length > 1 && (
           <div className="store-field">
             <label htmlFor="product-variant">Cor e tamanho</label>
@@ -142,6 +141,12 @@ export default function ProductDetails({ product }: { product: Product }) {
               <div>
                 <dt>Material</dt>
                 <dd>{product.material}</dd>
+              </div>
+            )}
+            {product.features.length > 0 && (
+              <div>
+                <dt>Detalhes</dt>
+                <dd>{product.features.join(" · ")}</dd>
               </div>
             )}
             {hasMeasures && (

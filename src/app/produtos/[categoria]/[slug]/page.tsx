@@ -26,9 +26,9 @@ export async function generateMetadata({
   const { categoria, slug } = await params;
   const p = await find(categoria, slug);
   if (!p) return { title: "Modelo não encontrado", robots: { index: false } };
-  const description = p.verified
-    ? p.description
-    : `Conheça ${p.name} e solicite um orçamento na Óptica Ocular, em Curitiba.`;
+  const description =
+    p.description ||
+    `Conheça ${p.name} e solicite um orçamento na Óptica Ocular, em Curitiba.`;
   return {
     title: p.name,
     description,
@@ -63,7 +63,7 @@ export default async function ProductPage({
     "@context": "https://schema.org",
     "@type": "Product",
     name: p.name,
-    ...(p.verified ? { description: p.description } : {}),
+    ...(p.description ? { description: p.description } : {}),
     brand: { "@type": "Brand", name: p.brand },
     ...(images.length ? { image: images.map((i) => siteUrl() + i) } : {}),
     ...(canSell(p)
